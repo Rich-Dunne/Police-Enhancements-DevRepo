@@ -1,16 +1,16 @@
 ﻿using Rage;
 using LSPD_First_Response.Mod.API;
+using System.Linq;
 
 namespace RichsPoliceEnhancements
 {
     class AmbientBackup
     {
-        public static void Main()
+        internal static void Main()
         {
             LHandle pursuit = null;
             while (true)
             {
-                GameFiber.Yield();
                 if (Functions.GetActivePursuit() != null)
                 {
                     pursuit = Functions.GetActivePursuit();
@@ -18,24 +18,16 @@ namespace RichsPoliceEnhancements
 
                 if (pursuit != null && Functions.IsPursuitStillRunning(pursuit))
                 {
-                    //Game.LogTrivial("[RPE Ambient Backup]: Player is in pursuit");
-                    foreach (Vehicle veh in Game.LocalPlayer.Character.GetNearbyVehicles(16))
+                    foreach (Vehicle veh in Game.LocalPlayer.Character.GetNearbyVehicles(16).Where(v => v && v.IsPoliceVehicle && v != Game.LocalPlayer.Character.CurrentVehicle && v.HasDriver))
                     {
-                        //Game.LogTrivial("[RPE Ambient Backup]: Searching for ambient cops");
-                        if (veh.IsValid() && veh.IsPoliceVehicle && veh != Game.LocalPlayer.Character.CurrentVehicle && veh.HasDriver)
+                        foreach (Ped ped in veh.Occupants.Where(p => p && !Functions.IsPedInPursuit(p)))
                         {
-                            foreach (Ped ped in veh.Occupants)
-                            {
-                                if (!Functions.IsPedInPursuit(ped))
-                                {
-                                    Functions.AddCopToPursuit(Functions.GetActivePursuit(), ped);
-                                    Game.LogTrivial("[RPE Ambient Backup]: Ambient cop added to pursuit.");
-                                    //Game.DisplaySubtitle("Ambient cop added to pursuit.");
-                                }
-                            }
+                            Functions.AddCopToPursuit(Functions.GetActivePursuit(), ped);
+                            Game.LogTrivial("[RPE Ambient Backup]: Ambient cop added to pursuit.");
                         }
                     }
                 }
+                GameFiber.Yield();
             }
         }
     }
