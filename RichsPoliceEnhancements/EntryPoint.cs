@@ -16,8 +16,8 @@ namespace RichsPoliceEnhancements
         public override void Initialize()
         {
             Settings.LoadSettings();
-            bool patronVerified = VerifyPatron();
-            if (patronVerified && Settings.EnableAmbientEvents)
+
+            if (Settings.EnableAmbientEvents)
             {
                 Game.LogTrivial("[RPE]: AmbientEvents are enabled.");
                 GameFiber AmbientEventsFiber = new GameFiber(() => EventSelect.Main());
@@ -102,19 +102,9 @@ namespace RichsPoliceEnhancements
 
         public override void Finally()
         {
-            Game.LogTrivial("[RPE]: Rich's Police Enhancements has been cleaned up.");
             PriorityRadioTraffic.VDPRTCancel.ReleaseVocalDispatchAPI();
             PriorityRadioTraffic.VDPRTRequest.ReleaseVocalDispatchAPI();
+            Game.LogTrivial("[RPE]: Rich's Police Enhancements has been cleaned up.");
         }
-
-        private bool VerifyPatron()
-        {
-            if(Settings.id == Settings.PatronKey)
-            {
-                return true;
-            }
-            return false;
-        }
-
     }
 }
