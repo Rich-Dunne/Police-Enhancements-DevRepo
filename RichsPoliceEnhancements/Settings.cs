@@ -5,12 +5,6 @@ namespace RichsPoliceEnhancements
 {
     internal static class Settings
     {
-        // Patreon Features
-        internal static string id = PatronVerification.passThrough(PatronVerification.GetID());
-        internal static string PatronKey = null; // This cannot reference VerifyUser because the file can just be shared and it will always work.  Must be manually set to each user's ID
-        internal static bool EnableAmbientEvents = true;
-
-        // Free Features
         internal static bool EnableAmbientBackup = true;
         internal static bool EnableAISirenCycle = true;
         internal static bool EnableSilentBackup = false;
@@ -18,8 +12,9 @@ namespace RichsPoliceEnhancements
         internal static bool EnableBOLO = false;
         internal static bool EnablePRT = false;
         internal static bool EnablePursuitUpdates = true;
+        internal static bool EnableAmbientEvents = false;
 
-        // Ambient Event Settings
+        // Ambient Event settings
         internal static Dictionary<string, string> eventFrequencies = new Dictionary<string, string>();
         internal static int EventCooldownTimer = 5;
         internal static bool EventBlips = false;
@@ -47,18 +42,14 @@ namespace RichsPoliceEnhancements
             InitializationFile ini = new InitializationFile("Plugins/LSPDFR/RichsPoliceEnhancements.ini");
             ini.Create();
 
-            // Patreon Features
-            PatronKey = ini.ReadString("Patreon Features", "PatronKey", null);
-            EnableAmbientEvents = ini.ReadBoolean("Patreon Features", "EnableAmbientEvents", true);
-
-            // Free Features
-            EnableAmbientBackup = ini.ReadBoolean("Free Features", "EnableAmbientBackup", true);
-            EnableAISirenCycle = ini.ReadBoolean("Free Features", "EnableAISirenCycle", true);
-            EnableSilentBackup = ini.ReadBoolean("Free Features", "EnableSilentBackup", false);
-            EnableTVI = ini.ReadBoolean("Free Features", "EnableTVI", false);
-            EnableBOLO = ini.ReadBoolean("Free Features", "EnableBOLO", false);
-            EnablePRT = ini.ReadBoolean("Free Features", "EnablePriorityRadioTraffic", false);
-            EnablePursuitUpdates = ini.ReadBoolean("Free Features", "EnablePursuitUpdates", true);
+            EnableAmbientBackup = ini.ReadBoolean("Features", "EnableAmbientBackup", true);
+            EnableAISirenCycle = ini.ReadBoolean("Features", "EnableAISirenCycle", true);
+            EnableSilentBackup = ini.ReadBoolean("Features", "EnableSilentBackup", false);
+            EnableTVI = ini.ReadBoolean("Features", "EnableTVI", false);
+            EnableBOLO = ini.ReadBoolean("Features", "EnableBOLO", false);
+            EnablePRT = ini.ReadBoolean("Features", "EnablePriorityRadioTraffic", false);
+            EnablePursuitUpdates = ini.ReadBoolean("Features", "EnablePursuitUpdates", true);
+            EnableAmbientEvents = ini.ReadBoolean("Features", "EnableAmbientEvents", false);
 
             // Ambient Event Settings
             EventCooldownTimer = ini.ReadInt32("Ambient Events", "EventCooldownTimer", 5);
