@@ -57,30 +57,33 @@ namespace RichsPoliceEnhancements
 
         internal static void AISirenCycler(LHandle pursuit, Vehicle policeVeh)
         {
-            Game.LogTrivial($"[RPE]: In the siren cycler");
-            Game.LogTrivial($"[RPE]: IsPursuitStillRunning: {Functions.IsPursuitStillRunning(pursuit)}");
+            Game.LogTrivial($"[RPE AI Siren Cycle]: In the siren cycler");
+            Game.LogTrivial($"[RPE AI Siren Cycle]: IsPursuitStillRunning: {Functions.IsPursuitStillRunning(pursuit)}");
             policeVeh.IsSirenOn = false;
             policeVeh.IsSirenSilent = true;
             int randomSleepDuration;
             while (Functions.IsPursuitStillRunning(pursuit) && policeVeh)
             {
-                Game.LogTrivial($"[RPE]: IsPursuitStillRunning: {Functions.IsPursuitStillRunning(pursuit)}");
                 randomSleepDuration = new Random().Next(10000, 20000);
+                GameFiber.Sleep(randomSleepDuration);
+
+                Game.LogTrivial($"[RPE AI Siren Cycle]: IsPursuitStillRunning: {Functions.IsPursuitStillRunning(pursuit)}");
                 if (!Functions.IsPursuitStillRunning(pursuit))
                 {
-                    Game.LogTrivial($"[RPE]: Pursuit is over, exiting siren cycler.");
+                    Game.LogTrivial($"[RPE AI Siren Cycle]: Pursuit is over, exiting siren cycler.");
                 }
 
                 if (!policeVeh.HasDriver)
                 {
-                    Game.LogTrivial($"[RPE]: Police vehicle doesn't have a driver.  We'll keep looping in case they re-enter the vehicle.");
+                    Game.LogTrivial($"[RPE AI Siren Cycle]: Police vehicle doesn't have a driver.  We'll keep looping in case they re-enter the vehicle.");
                     GameFiber.Yield();
                     continue;
                 }
 
                 if (Settings.EnableSilentBackup && Game.LocalPlayer.Character.LastVehicle && !Game.LocalPlayer.Character.LastVehicle.IsSirenOn)
                 {
-                    Game.LogTrivial($"[RPE]: SilentBackup is enabled and your vehicle's siren is off, so we don't need to cycle the AI's sirens.");
+                    Game.LogTrivial($"[RPE AI Siren Cycle]: SilentBackup is enabled and your vehicle's siren is off, so we don't need to cycle the AI's sirens.");
+                    GameFiber.Yield();
                     continue;
                 }
 
@@ -94,12 +97,11 @@ namespace RichsPoliceEnhancements
                 }
                 else
                 {
-                    Game.LogTrivial($"[RPE]: Police vehicle is no longer valid");
+                    Game.LogTrivial($"[RPE AI Siren Cycle]: Police vehicle is no longer valid");
                     return;
                 }
-                GameFiber.Sleep(randomSleepDuration);
             }
-            Game.LogTrivial($"[RPE]: Pursuit is over");
+            Game.LogTrivial($"[RPE AI Siren Cycle]: Pursuit is over");
         }
     }
 }
