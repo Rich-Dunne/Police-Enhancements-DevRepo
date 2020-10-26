@@ -13,6 +13,7 @@ namespace RichsPoliceEnhancements
             LHandle pursuit = null;
             List<Vehicle> pursuitVehicles = new List<Vehicle>();
             bool pursuitCopsCollectorStarted = false;
+
             while (true)
             {
                 if (Functions.GetActivePursuit() != null && !pursuitCopsCollectorStarted)
@@ -41,7 +42,7 @@ namespace RichsPoliceEnhancements
         {
             while (Functions.GetActivePursuit() != null)
             {
-                foreach (Vehicle veh in Game.LocalPlayer.Character.GetNearbyVehicles(16).Where(v => v && v.IsPoliceVehicle && v != Game.LocalPlayer.Character.LastVehicle && v != Game.LocalPlayer.Character.CurrentVehicle && v.HasDriver && Functions.IsPedInPursuit(v.Driver) && v.IsSirenOn && !pursuitVehicles.Contains(v)))
+                foreach (Vehicle veh in Game.LocalPlayer.Character.GetNearbyVehicles(16).Where(v => v && v.IsPoliceVehicle && v != Game.LocalPlayer.Character.LastVehicle && v != Game.LocalPlayer.Character.CurrentVehicle && v.HasDriver && v.Driver.IsAlive && Functions.IsPedInPursuit(v.Driver) && v.IsSirenOn && !pursuitVehicles.Contains(v)))
                 {
                     Game.LogTrivial("[RPE AI Siren Cycle]: Added police vehicle to list for siren cycling");
                     pursuitVehicles.Add(veh);
@@ -57,13 +58,19 @@ namespace RichsPoliceEnhancements
         internal static void AISirenCycler(LHandle pursuit, Vehicle policeVeh)
         {
             Game.LogTrivial($"[RPE]: In the siren cycler");
-            Game.LogTrivial($"IsPursuitStillRunning: {Functions.IsPursuitStillRunning(pursuit)}");
+            Game.LogTrivial($"[RPE]: IsPursuitStillRunning: {Functions.IsPursuitStillRunning(pursuit)}");
             policeVeh.IsSirenOn = false;
             policeVeh.IsSirenSilent = true;
-            int randomSleepDuration = 10000;
+            int randomSleepDuration;
             while (Functions.IsPursuitStillRunning(pursuit) && policeVeh)
             {
+                Game.LogTrivial($"[RPE]: IsPursuitStillRunning: {Functions.IsPursuitStillRunning(pursuit)}");
                 randomSleepDuration = new Random().Next(10000, 20000);
+                if (!Functions.IsPursuitStillRunning(pursuit))
+                {
+                    Game.LogTrivial($"[RPE]: Pursuit is over, exiting siren cycler.");
+                }
+
                 if (!policeVeh.HasDriver)
                 {
                     Game.LogTrivial($"[RPE]: Police vehicle doesn't have a driver.  We'll keep looping in case they re-enter the vehicle.");
