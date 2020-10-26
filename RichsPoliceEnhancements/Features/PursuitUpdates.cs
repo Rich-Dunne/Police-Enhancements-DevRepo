@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Rage;
 using LSPD_First_Response.Mod.API;
 using System.Linq;
+using System.IO;
 
 namespace RichsPoliceEnhancements
 {
@@ -31,6 +32,13 @@ namespace RichsPoliceEnhancements
             List<Vehicle> vehiclesList = new List<Vehicle>();
 
             Game.LogTrivial($"[RPE Pursuit Update]: Pursuit started");
+            if (Settings.EnablePRT)
+            {
+                GameFiber.StartNew(() =>
+                {
+                    LoopPRTAudio();
+                });
+            }
             GameFiber.StartNew(() =>
             {
                 GameFiber.Sleep(5000);
@@ -183,6 +191,21 @@ namespace RichsPoliceEnhancements
                 }
                 return "~w~";
             }
+        }
+
+        private static void LoopPRTAudio()
+        {
+            PriorityRadioTraffic.PRT = true;
+            Game.DisplayNotification($"~y~~h~DISPATCH - PRIORITY RADIO TRAFFIC ALERT~h~\n~s~~w~All units ~r~clear this channel~w~ for priority radio traffic.");
+            GameFiber.Sleep(3000);
+            while (Functions.GetActivePursuit() != null && PriorityRadioTraffic.PRT)
+            {
+                System.Media.SoundPlayer player = new System.Media.SoundPlayer(Directory.GetCurrentDirectory() + @"\lspdfr\audio\sfx\PRTTone.wav");
+                player.Play();
+                GameFiber.Sleep(Settings.PRTToneTimer * 1000);
+            }
+            PriorityRadioTraffic.PRT = false;
+            Game.DisplayNotification($"~y~~h~DISPATCH - PRIORITY RADIO TRAFFIC ALERT~h~\n~s~~w~All units be advised, priority radio traffic has been canceled.  This channel is now ~g~open.");
         }
     }
 }
