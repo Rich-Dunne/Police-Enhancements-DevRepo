@@ -1,5 +1,6 @@
 ﻿using Rage;
 using LSPD_First_Response.Mod.API;
+using System.Reflection;
 
 [assembly: Rage.Attributes.Plugin("Rich's Police Enhancements V1.5", Author = "Rich", Description = "Quality of life features for police AI")]
 
@@ -11,22 +12,20 @@ namespace RichsPoliceEnhancements
 {
     public class Main : Plugin
     {
-        public static Ped player = Game.LocalPlayer.Character;
-
         public override void Initialize()
         {
             Settings.LoadSettings();
 
-            if (Settings.EnableAmbientEvents)
-            {
-                Game.LogTrivial("[RPE]: AmbientEvents are enabled.");
-                GameFiber AmbientEventsFiber = new GameFiber(() => EventSelect.Main());
-                AmbientEventsFiber.Start();
-            }
-            else
-            {
-                Game.LogTrivial("[RPE]: AmbientEvents are disabled.");
-            }
+            //if (Settings.EnableAmbientEvents)
+            //{
+            //    Game.LogTrivial("[RPE]: AmbientEvents are enabled.");
+            //    GameFiber AmbientEventsFiber = new GameFiber(() => EventSelect.Main(), "Ambient Event Main");
+            //    AmbientEventsFiber.Start();
+            //}
+            //else
+            //{
+            //    Game.LogTrivial("[RPE]: AmbientEvents are disabled.");
+            //}
             if (Settings.EnableAmbientBackup)
             {
                 Game.LogTrivial("[RPE]: AmbientBackup is enabled.");
@@ -98,6 +97,8 @@ namespace RichsPoliceEnhancements
             {
                 Game.LogTrivial("[RPE]: AutomaticPursuitUpdates is disabled.");
             }
+
+            GetAssemblyVersion();
         }
 
         public override void Finally()
@@ -105,6 +106,12 @@ namespace RichsPoliceEnhancements
             PriorityRadioTraffic.VDPRTCancel.ReleaseVocalDispatchAPI();
             PriorityRadioTraffic.VDPRTRequest.ReleaseVocalDispatchAPI();
             Game.LogTrivial("[RPE]: Rich's Police Enhancements has been cleaned up.");
+        }
+
+        void GetAssemblyVersion()
+        {
+            string version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
+            Game.LogTrivial($"Rich's Police Enhancements V{version} is ready.");
         }
     }
 }

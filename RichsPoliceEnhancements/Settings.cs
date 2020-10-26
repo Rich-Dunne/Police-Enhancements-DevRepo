@@ -5,9 +5,10 @@ namespace RichsPoliceEnhancements
 {
     internal static class Settings
     {
+        // Feature Settings
         internal static bool EnableAmbientBackup = true;
         internal static bool EnableAISirenCycle = true;
-        internal static bool EnableSilentBackup = false;
+        internal static bool EnableSilentBackup = true;
         internal static bool EnableTVI = false;
         internal static bool EnableBOLO = false;
         internal static bool EnablePRT = false;
@@ -35,16 +36,17 @@ namespace RichsPoliceEnhancements
 
         // Pursuit Update Settings
         internal static int PursuitUpdateTimer = 20;
+        internal static readonly InitializationFile ini = new InitializationFile("Plugins/LSPDFR/RichsPoliceEnhancements.ini");
 
         internal static void LoadSettings()
         {
             Game.LogTrivial("[RPE]: Loading RichsPoliceEnhancements.ini settings");
-            InitializationFile ini = new InitializationFile("Plugins/LSPDFR/RichsPoliceEnhancements.ini");
             ini.Create();
 
+            // Feature settings
             EnableAmbientBackup = ini.ReadBoolean("Features", "EnableAmbientBackup", true);
             EnableAISirenCycle = ini.ReadBoolean("Features", "EnableAISirenCycle", true);
-            EnableSilentBackup = ini.ReadBoolean("Features", "EnableSilentBackup", false);
+            EnableSilentBackup = ini.ReadBoolean("Features", "EnableSilentBackup", true);
             EnableTVI = ini.ReadBoolean("Features", "EnableTVI", false);
             EnableBOLO = ini.ReadBoolean("Features", "EnableBOLO", false);
             EnablePRT = ini.ReadBoolean("Features", "EnablePriorityRadioTraffic", false);

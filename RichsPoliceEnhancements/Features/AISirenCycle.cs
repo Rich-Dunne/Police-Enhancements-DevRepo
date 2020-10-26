@@ -12,22 +12,25 @@ namespace RichsPoliceEnhancements
         {
             LHandle pursuit = null;
             List<Vehicle> pursuitVehicles = new List<Vehicle>();
-
+            bool pursuitCopsCollectorStarted = false;
             while (true)
             {
-                if (Functions.GetActivePursuit() != null)
+                if (Functions.GetActivePursuit() != null && !pursuitCopsCollectorStarted)
                 {
                     pursuit = Functions.GetActivePursuit();
 
                     Game.LogTrivial("[RPE AI Siren Cycle]: Beginning pursuit cop collector");
                     GameFiber PursuitCopsCollectorFiber = new GameFiber(() => PursuitCopsCollector(pursuit, pursuitVehicles));
                     PursuitCopsCollectorFiber.Start();
+                    pursuitCopsCollectorStarted = true;
                 }
 
-                if (pursuit != null && !Functions.IsPursuitStillRunning(pursuit))
+                if (pursuit != null && Functions.GetActivePursuit() == null)
                 {
+                    Game.LogTrivial("[RPE AI Siren Cycle]: pursuit variable is not null, but the pursuit is no longer running");
                     pursuit = null;
                     pursuitVehicles.Clear();
+                    pursuitCopsCollectorStarted = false;
                 }
 
                 GameFiber.Yield();
@@ -36,7 +39,7 @@ namespace RichsPoliceEnhancements
 
         internal static void PursuitCopsCollector(LHandle pursuit, List<Vehicle> pursuitVehicles)
         {
-            while (pursuit != null)
+            while (Functions.GetActivePursuit() != null)
             {
                 foreach (Vehicle veh in Game.LocalPlayer.Character.GetNearbyVehicles(16).Where(v => v && v.IsPoliceVehicle && v != Game.LocalPlayer.Character.LastVehicle && v != Game.LocalPlayer.Character.CurrentVehicle && v.HasDriver && Functions.IsPedInPursuit(v.Driver) && v.IsSirenOn && !pursuitVehicles.Contains(v)))
                 {
@@ -53,11 +56,14 @@ namespace RichsPoliceEnhancements
 
         internal static void AISirenCycler(LHandle pursuit, Vehicle policeVeh)
         {
+            Game.LogTrivial($"[RPE]: In the siren cycler");
+            Game.LogTrivial($"IsPursuitStillRunning: {Functions.IsPursuitStillRunning(pursuit)}");
+            policeVeh.IsSirenOn = false;
+            policeVeh.IsSirenSilent = true;
             int randomSleepDuration = 10000;
             while (Functions.IsPursuitStillRunning(pursuit) && policeVeh)
             {
                 randomSleepDuration = new Random().Next(10000, 20000);
-
                 if (!policeVeh.HasDriver)
                 {
                     Game.LogTrivial($"[RPE]: Police vehicle doesn't have a driver.  We'll keep looping in case they re-enter the vehicle.");
@@ -84,8 +90,9 @@ namespace RichsPoliceEnhancements
                     Game.LogTrivial($"[RPE]: Police vehicle is no longer valid");
                     return;
                 }
+                GameFiber.Sleep(randomSleepDuration);
             }
-            GameFiber.Sleep(randomSleepDuration);
+            Game.LogTrivial($"[RPE]: Pursuit is over");
         }
     }
 }
