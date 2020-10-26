@@ -6,13 +6,13 @@ namespace RichsPoliceEnhancements
     internal static class Settings
     {
         // Feature Settings
-        internal static bool EnableAmbientBackup = true;
-        internal static bool EnableAISirenCycle = true;
-        internal static bool EnableSilentBackup = true;
+        internal static bool EnableAmbientBackup = false;
+        internal static bool EnableAISirenCycle = false;
+        internal static bool EnableSilentBackup = false;
         internal static bool EnableTVI = false;
         internal static bool EnableBOLO = false;
         internal static bool EnablePRT = false;
-        internal static bool EnablePursuitUpdates = true;
+        internal static bool EnablePursuitUpdates = false;
         internal static bool EnableAmbientEvents = false;
 
         // Ambient Event settings
@@ -44,13 +44,13 @@ namespace RichsPoliceEnhancements
             ini.Create();
 
             // Feature settings
-            EnableAmbientBackup = ini.ReadBoolean("Features", "EnableAmbientBackup", true);
-            EnableAISirenCycle = ini.ReadBoolean("Features", "EnableAISirenCycle", true);
-            EnableSilentBackup = ini.ReadBoolean("Features", "EnableSilentBackup", true);
+            EnableAmbientBackup = ini.ReadBoolean("Features", "EnableAmbientBackup", false);
+            EnableAISirenCycle = ini.ReadBoolean("Features", "EnableAISirenCycle", false);
+            EnableSilentBackup = ini.ReadBoolean("Features", "EnableSilentBackup", false);
             EnableTVI = ini.ReadBoolean("Features", "EnableTVI", false);
             EnableBOLO = ini.ReadBoolean("Features", "EnableBOLO", false);
             EnablePRT = ini.ReadBoolean("Features", "EnablePriorityRadioTraffic", false);
-            EnablePursuitUpdates = ini.ReadBoolean("Features", "EnablePursuitUpdates", true);
+            EnablePursuitUpdates = ini.ReadBoolean("Features", "EnablePursuitUpdates", false);
             EnableAmbientEvents = ini.ReadBoolean("Features", "EnableAmbientEvents", false);
 
             // Ambient Event Settings
