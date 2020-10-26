@@ -1,6 +1,7 @@
 ﻿using Rage;
 using LSPD_First_Response.Mod.API;
 using System.Reflection;
+using System.Linq;
 
 [assembly: Rage.Attributes.Plugin("Rich's Police Enhancements V1.5", Author = "Rich", Description = "Quality of life features for police AI")]
 
@@ -36,6 +37,7 @@ namespace RichsPoliceEnhancements
             {
                 Game.LogTrivial("[RPE]: AmbientBackup is disabled.");
             }
+
             if (Settings.EnableAISirenCycle)
             {
                 Game.LogTrivial("[RPE]: AISirenCycle is enabled.");
@@ -46,6 +48,7 @@ namespace RichsPoliceEnhancements
             {
                 Game.LogTrivial("[RPE]: AISirenCycle is disabled.");
             }
+
             if (Settings.EnableSilentBackup)
             {
                 Game.LogTrivial("[RPE]: SilentBackup is enabled.");
@@ -56,6 +59,7 @@ namespace RichsPoliceEnhancements
             {
                 Game.LogTrivial("[RPE]: SilentBackup is disabled.");
             }
+
             if (Settings.EnableTVI)
             {
                 Game.LogTrivial("[RPE]: TVI is enabled.");
@@ -66,6 +70,7 @@ namespace RichsPoliceEnhancements
             {
                 Game.LogTrivial("[RPE]: TVI is disabled.");
             }
+
             if (Settings.EnableBOLO)
             {
                 Game.LogTrivial("[RPE]: BOLO is enabled.");
@@ -78,6 +83,7 @@ namespace RichsPoliceEnhancements
             {
                 Game.LogTrivial("[RPE]: BOLO is disabled.");
             }
+
             if (Settings.EnablePRT)
             {
                 Game.LogTrivial("[RPE]: PriorityRadioTraffic is enabled.");
@@ -88,6 +94,7 @@ namespace RichsPoliceEnhancements
             {
                 Game.LogTrivial("[RPE]: PriorityRadioTraffic is disabled.");
             }
+
             if (Settings.EnablePursuitUpdates)
             {
                 Game.LogTrivial("[RPE]: AutomaticPursuitUpdates is enabled.");
@@ -103,9 +110,14 @@ namespace RichsPoliceEnhancements
 
         public override void Finally()
         {
-            PriorityRadioTraffic.VDPRTCancel.ReleaseVocalDispatchAPI();
-            PriorityRadioTraffic.VDPRTRequest.ReleaseVocalDispatchAPI();
+            if (IsPluginLoaded("VocalDispatch"))
+            {
+                PriorityRadioTraffic.VDPRTCancel.ReleaseVocalDispatchAPI();
+                PriorityRadioTraffic.VDPRTRequest.ReleaseVocalDispatchAPI();
+            }
             Game.LogTrivial("[RPE]: Rich's Police Enhancements has been cleaned up.");
+
+            bool IsPluginLoaded(string pluginName) => Functions.GetAllUserPlugins().ToList().Any(a => a.FullName.Contains(pluginName));
         }
 
         void GetAssemblyVersion()
