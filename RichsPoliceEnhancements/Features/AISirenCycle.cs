@@ -66,11 +66,18 @@ namespace RichsPoliceEnhancements
             {
                 randomSleepDuration = new Random().Next(10000, 20000);
                 GameFiber.Sleep(randomSleepDuration);
-
                 Game.LogTrivial($"[RPE AI Siren Cycle]: IsPursuitStillRunning: {Functions.IsPursuitStillRunning(pursuit)}");
+
+                if (!policeVeh)
+                {
+                    Game.LogTrivial($"[RPE AI Siren Cycle]: Police vehicle is null.");
+                    return;
+                }
+
                 if (!Functions.IsPursuitStillRunning(pursuit))
                 {
                     Game.LogTrivial($"[RPE AI Siren Cycle]: Pursuit is over, exiting siren cycler.");
+                    return;
                 }
 
                 if (!policeVeh.HasDriver)
@@ -97,7 +104,7 @@ namespace RichsPoliceEnhancements
                 }
                 else
                 {
-                    Game.LogTrivial($"[RPE AI Siren Cycle]: Police vehicle is no longer valid");
+                    Game.LogTrivial($"[RPE AI Siren Cycle]: Police vehicle is null");
                     return;
                 }
             }
