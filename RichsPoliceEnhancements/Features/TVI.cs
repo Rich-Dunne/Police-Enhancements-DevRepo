@@ -6,7 +6,7 @@ using LSPD_First_Response.Mod.API;
 
 namespace RichsPoliceEnhancements
 {
-    class TVI
+    internal static class TVI
     {
         private static bool alreadyRunning = false;
 
