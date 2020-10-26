@@ -19,13 +19,13 @@ namespace RichsPoliceEnhancements
                         //Game.LogTrivial($"[RPE Silent Backup]: Found nearby police vehicle with siren on.");
                         if (!Game.LocalPlayer.Character.LastVehicle.IsSirenOn || (Game.LocalPlayer.Character.CurrentVehicle && !Game.LocalPlayer.Character.CurrentVehicle.IsSirenOn))
                         {
-                            Game.LogTrivial($"[RPE Silent Backup]:  Silencing nearby units");
+                            //Game.LogTrivial($"[RPE Silent Backup]:  Silencing nearby units");
                             policeVeh.IsSirenOn = false;
                             policeVeh.IsSirenSilent = true;
                         }
                         else if(Game.LocalPlayer.Character.LastVehicle.IsSirenOn || (Game.LocalPlayer.Character.CurrentVehicle && Game.LocalPlayer.Character.CurrentVehicle.IsSirenOn))
                         {
-                            Game.LogTrivial($"[RPE Silent Backup]:  Enabling nearby units' sirens");
+                            //Game.LogTrivial($"[RPE Silent Backup]:  Enabling nearby units' sirens");
                             policeVeh.IsSirenOn = true;
                             policeVeh.IsSirenSilent = false;
                         }
