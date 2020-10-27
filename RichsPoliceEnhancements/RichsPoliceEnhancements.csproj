@@ -81,6 +81,8 @@
     <Compile Include="Features\TVI.cs" />
     <Compile Include="Features\VocalDispatch\Utilities.cs" />
     <Compile Include="Features\VocalDispatch\VocalDispatchHelper.cs" />
+    <Compile Include="VehicleColor.cs" />
+    <Compile Include="VehicleExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Properties\Resources.resx">
