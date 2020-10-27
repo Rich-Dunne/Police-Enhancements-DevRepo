@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Media;
 using Rage;
 using LSPD_First_Response.Mod.API;
 using LSPD_First_Response.Engine.Scripting.Entities;
@@ -13,6 +14,7 @@ namespace RichsPoliceEnhancements
     internal class BOLO
     {
         private static bool BOLOActive = false;
+
         private enum Direction
         {
             north = 0,
@@ -151,6 +153,7 @@ namespace RichsPoliceEnhancements
 
         internal static void Main(int BOLOTimer, int BOLOFrequency)
         {
+            var soundPlayer = new SoundPlayer(Directory.GetCurrentDirectory() + @"\lspdfr\audio\sfx\AlertTone.wav");
             Game.LogTrivial($"[RPE BOLO]: BOLO fiber started with a timer of {BOLOTimer / 60000} minutes.");
 
             GameFiber.Sleep(60000);  // Disable for testing
@@ -189,36 +192,40 @@ namespace RichsPoliceEnhancements
                 BOLOActive = true;
                 var startTime = Game.GameTime;
                 var oldTime = Game.GameTime;
-                DisplayBOLOInfo(boloVehicle);
+                DisplayBOLOInfo(soundPlayer, boloVehicle);
+
                 Game.LogTrivial($"BOLOTimer: {BOLOTimer}");
                 while (boloVehicle && boloSuspect)
                 {
                     var difference = Game.GameTime - oldTime;
                     if (Functions.IsPedArrested(boloSuspect) || (Functions.GetCurrentPullover() != null && Functions.GetPulloverSuspect(Functions.GetCurrentPullover()) == boloSuspect))
                     {
-                        System.Media.SoundPlayer player = new System.Media.SoundPlayer(Directory.GetCurrentDirectory() + @"\lspdfr\audio\sfx\AlertTone.wav");
-                        player.Play();
-                        Game.DisplayNotification($"~r~~h~BOLO ALERT - CANCELLED~h~\n~g~You located the suspect(s).");
+                        EndBOLO(boloVehicle, boloSuspect, $"~r~~h~BOLO ALERT - CANCELLED~h~\n~g~You located the suspect(s).");
                         Game.LogTrivial($"[RPE BOLO]: BOLO ending, suspect stopped or arrested by player.");
-                        BOLOActive = false;
                         break;
                     }
                     if (Game.GameTime - startTime >= BOLOTimer)
                     {
-                        var player = new System.Media.SoundPlayer(Directory.GetCurrentDirectory() + @"\lspdfr\audio\sfx\AlertTone.wav");
-                        player.Play();
-                        Game.DisplayNotification($"~r~~h~BOLO ALERT - CANCELLED~h~\n~w~You failed to locate the suspect(s) in time.");
+                        EndBOLO(boloVehicle, boloSuspect, $"~r~~h~BOLO ALERT - CANCELLED~h~\n~w~You failed to locate the suspect(s) in time.");
                         Game.LogTrivial($"[RPE BOLO]: BOLO ending, player failed to locate suspect(s) in time.");
-                        BOLOActive = false;
                         break;
                     }
                     if (difference >= 60000 && UpdateCheck(boloVehicle, boloSuspect))
                     {
                         oldTime = Game.GameTime;
-                        DisplayBOLOInfo(boloVehicle, true);
+                        DisplayBOLOInfo(soundPlayer, boloVehicle, true);
                     }
                     GameFiber.Sleep(1000);
                 }
+            }
+
+            void EndBOLO(Vehicle boloVehicle, Ped boloSuspect, string message)
+            {
+                soundPlayer.Play();
+                Game.DisplayNotification(message);
+                boloVehicle.IsPersistent = false;
+                boloSuspect.IsPersistent = false;
+                BOLOActive = false;
             }
         }
 
@@ -274,7 +281,7 @@ namespace RichsPoliceEnhancements
             }
         }
 
-        private static void DisplayBOLOInfo(Vehicle boloVeh, bool update = false)
+        private static void DisplayBOLOInfo(SoundPlayer soundPlayer, Vehicle boloVeh, bool update = false)
         {
             string boloColor;
             try
@@ -291,8 +298,7 @@ namespace RichsPoliceEnhancements
             var worldZone = Functions.GetZoneAtPosition(boloVeh.Position).GameName;
             var streetName = World.GetStreetName(World.GetStreetHash(boloVeh.Position));
             var boloReason = boloReasons[new Random().Next(0, boloReasons.Length)];
-            var player = new System.Media.SoundPlayer(Directory.GetCurrentDirectory() + @"\lspdfr\audio\sfx\AlertTone.wav");
-            player.Play();
+            soundPlayer.Play();
 
             if (!update)
             {
