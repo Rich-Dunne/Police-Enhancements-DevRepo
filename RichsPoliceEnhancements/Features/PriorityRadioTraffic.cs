@@ -77,7 +77,7 @@ namespace RichsPoliceEnhancements
             return true;
         }
 
-        private static void AudioLoop()
+        internal static void AudioLoop()
         {
             if (!PRT)
             {

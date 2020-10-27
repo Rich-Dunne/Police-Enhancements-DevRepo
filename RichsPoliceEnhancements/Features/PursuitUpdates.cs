@@ -195,17 +195,13 @@ namespace RichsPoliceEnhancements
 
         private static void LoopPRTAudio()
         {
-            PriorityRadioTraffic.PRT = true;
-            Game.DisplayNotification($"~y~~h~DISPATCH - PRIORITY RADIO TRAFFIC ALERT~h~\n~s~~w~All units ~r~clear this channel~w~ for priority radio traffic.");
-            GameFiber.Sleep(3000);
-            while (Functions.GetActivePursuit() != null && PriorityRadioTraffic.PRT)
+            PriorityRadioTraffic.AudioLoop();
+            while (Functions.GetActivePursuit() != null)
             {
-                System.Media.SoundPlayer player = new System.Media.SoundPlayer(Directory.GetCurrentDirectory() + @"\lspdfr\audio\sfx\PRTTone.wav");
-                player.Play();
-                GameFiber.Sleep(Settings.PRTToneTimer * 1000);
+                GameFiber.Sleep(1000);
             }
             PriorityRadioTraffic.PRT = false;
-            Game.DisplayNotification($"~y~~h~DISPATCH - PRIORITY RADIO TRAFFIC ALERT~h~\n~s~~w~All units be advised, priority radio traffic has been canceled.  This channel is now ~g~open.");
+            Game.DisplayNotification($"~y~~h~DISPATCH - PRIORITY RADIO TRAFFIC ALERT~h~\n~s~~w~All units be advised, priority radio traffic has been canceled.  This channel is now ~g~open~w~.");
         }
     }
 }
