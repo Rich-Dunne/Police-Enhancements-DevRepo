@@ -233,7 +233,7 @@ namespace RichsPoliceEnhancements
         {
             Game.LogTrivial($"[RPE BOLO]: Looking for BOLO vehicles");
             var pulloverVehicle = GetPulloverVehicle();
-            var boloVehicles = World.GetAllVehicles().Where(x => x && x.IsCar && !x.IsPoliceVehicle && x != Game.LocalPlayer.Character.CurrentVehicle && x != Game.LocalPlayer.Character.LastVehicle && x.HasDriver && x.Driver.IsAlive && x != pulloverVehicle);
+            var boloVehicles = World.GetAllVehicles().Where(x => x && x.IsCar && !x.IsPoliceVehicle && !x.HasSiren && !x.HasTowArm && x != Game.LocalPlayer.Character.CurrentVehicle && x != Game.LocalPlayer.Character.LastVehicle && x.HasDriver && x.Driver.IsAlive && x != pulloverVehicle);
 
             AddBOLOVehiclesToList();
 
