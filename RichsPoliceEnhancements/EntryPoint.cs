@@ -2,6 +2,7 @@
 using LSPD_First_Response.Mod.API;
 using System.Reflection;
 using System.Linq;
+using System.IO;
 
 [assembly: Rage.Attributes.Plugin("Rich's Police Enhancements V1.5", Author = "Rich", Description = "Quality of life features for police AI")]
 
@@ -20,7 +21,7 @@ namespace RichsPoliceEnhancements
             //if (Settings.EnableAmbientEvents)
             //{
             //    Game.LogTrivial("[RPE]: AmbientEvents are enabled.");
-            //    GameFiber AmbientEventsFiber = new GameFiber(() => EventSelect.Main(), "Ambient Event Main");
+            //    GameFiber AmbientEventsFiber = new GameFiber(() => AmbientEvents.Main(), "RPE Ambient Event Main Fiber");
             //    AmbientEventsFiber.Start();
             //}
             //else
@@ -30,7 +31,7 @@ namespace RichsPoliceEnhancements
             if (Settings.EnableAmbientBackup)
             {
                 Game.LogTrivial("[RPE]: AmbientBackup is enabled.");
-                GameFiber AmbientBackupFiber = new GameFiber(() => AmbientBackup.Main());
+                GameFiber AmbientBackupFiber = new GameFiber(() => AmbientBackup.Main(), "RPE Ambient Backup Fiber");
                 AmbientBackupFiber.Start();
             }
             else
@@ -41,7 +42,7 @@ namespace RichsPoliceEnhancements
             if (Settings.EnableAISirenCycle)
             {
                 Game.LogTrivial("[RPE]: AISirenCycle is enabled.");
-                GameFiber SirenCycleFiber = new GameFiber(() => AISirenCycle.Main());
+                GameFiber SirenCycleFiber = new GameFiber(() => AISirenCycle.Main(), "RPE Siren Cycle Fiber");
                 SirenCycleFiber.Start();
             }
             else
@@ -52,7 +53,7 @@ namespace RichsPoliceEnhancements
             if (Settings.EnableSilentBackup)
             {
                 Game.LogTrivial("[RPE]: SilentBackup is enabled.");
-                GameFiber SilentBackupFiber = new GameFiber(() => SilentBackup.Main());
+                GameFiber SilentBackupFiber = new GameFiber(() => SilentBackup.Main(), "RPE Silent Backup Fiber");
                 SilentBackupFiber.Start();
             }
             else
@@ -63,7 +64,7 @@ namespace RichsPoliceEnhancements
             if (Settings.EnableTVI)
             {
                 Game.LogTrivial("[RPE]: TVI is enabled.");
-                GameFiber TVIFiber = new GameFiber(() => TVI.Main());
+                GameFiber TVIFiber = new GameFiber(() => TVI.Main(), "RPE TVI Fiber");
                 TVIFiber.Start();
             }
             else
@@ -76,7 +77,7 @@ namespace RichsPoliceEnhancements
                 Game.LogTrivial("[RPE]: BOLO is enabled.");
                 Settings.BOLOTimer *= 60000;
                 Settings.BOLOFrequency *= 60000;
-                GameFiber BOLOFiber = new GameFiber(() => BOLO.Main(Settings.BOLOTimer, Settings.BOLOFrequency));
+                GameFiber BOLOFiber = new GameFiber(() => BOLO.Main(Settings.BOLOTimer, Settings.BOLOFrequency), "RPE BOLO Fiber");
                 BOLOFiber.Start();
             }
             else
@@ -84,15 +85,22 @@ namespace RichsPoliceEnhancements
                 Game.LogTrivial("[RPE]: BOLO is disabled.");
             }
 
-            if (Settings.EnablePRT)
+            if (DoesPluginExist("PoliceSmartRadio.dll"))
             {
-                Game.LogTrivial("[RPE]: PriorityRadioTraffic is enabled.");
-                GameFiber PRTFiber = new GameFiber(() => PriorityRadioTraffic.Main());
-                PRTFiber.Start();
+                if (Settings.EnablePRT)
+                {
+                    Game.LogTrivial("[RPE]: PriorityRadioTraffic is enabled.");
+                    GameFiber PRTFiber = new GameFiber(() => PriorityRadioTraffic.Main(DoesPluginExist("VocalDispatch.dll")), "RPE Priority Radio Traffic Fiber");
+                    PRTFiber.Start();
+                }
+                else
+                {
+                    Game.LogTrivial("[RPE]: PriorityRadioTraffic is disabled.");
+                }
             }
             else
             {
-                Game.LogTrivial("[RPE]: PriorityRadioTraffic is disabled.");
+                Game.LogTrivial("[RPE]: PriorityRadioTraffic is disabled, PoliceSmartRadio is not installed.");
             }
 
             if (Settings.EnablePursuitUpdates)
@@ -120,10 +128,25 @@ namespace RichsPoliceEnhancements
             bool IsPluginLoaded(string pluginName) => Functions.GetAllUserPlugins().ToList().Any(a => a.FullName.Contains(pluginName));
         }
 
-        void GetAssemblyVersion()
+        private void GetAssemblyVersion()
         {
             string version = Assembly.GetExecutingAssembly().GetName().Version.ToString();
             Game.LogTrivial($"Rich's Police Enhancements V{version} is ready.");
+        }
+
+        private static bool DoesPluginExist(string plugin)
+        {
+            var currentDirectory = Directory.GetCurrentDirectory() + "\\plugins\\lspdfr\\";
+            if (File.Exists($"{currentDirectory}{plugin}"))
+            {
+                //Game.LogTrivial($"{plugin} is installed.");
+                return true;
+            }
+            else
+            {
+                //Game.LogTrivial($"{plugin} is NOT installed.");
+                return false;
+            }
         }
     }
 }

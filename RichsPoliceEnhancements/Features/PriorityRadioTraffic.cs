@@ -4,6 +4,8 @@ using Rage;
 using LSPD_First_Response.Mod.API;
 using VocalDispatchAPIExample;
 using System.Linq;
+using System.Reflection;
+using System.Net;
 
 namespace RichsPoliceEnhancements
 {
@@ -13,29 +15,18 @@ namespace RichsPoliceEnhancements
         internal static VocalDispatchHelper VDPRTRequest = new VocalDispatchHelper();
         internal static VocalDispatchHelper VDPRTCancel = new VocalDispatchHelper();
 
-        internal static void Main()
+        internal static void Main(bool vocalDispatchInstalled)
         {
-            if (IsPluginLoaded("PoliceSmartRadio"))
-            {
-                Game.LogTrivial("[RPE Priority Radio Traffic]: PSR is installed.");
                 Action audioLoopAction = new Action(InitAudioLoopFiber);
                 PoliceSmartRadio.API.Functions.AddActionToButton(InitAudioLoopFiber, "prt");
-            }
-            else
-            {
-                Game.LogTrivial("[RPE Priority Radio Traffic]: This feature requires PoliceSmartRadio, but it was not found.");
-                return;
-            }
 
-            if (IsPluginLoaded("VocalDispatch"))
+            if (vocalDispatchInstalled)
             {
                 Game.LogTrivial("[RPE Priority Radio Traffic]: VocalDispatch is installed.");
                 AppDomain.CurrentDomain.AssemblyResolve += new ResolveEventHandler(Utilities.ResolveAssemblyEventHandler);
                 VDPRTRequest.SetupVocalDispatchAPI("RichsPoliceEnhancements.RequestPriorityTraffic", new Utilities.VocalDispatchEventDelegate(VocalDispatchSaysPlayerIsRequestingPriorityTraffic));
                 VDPRTCancel.SetupVocalDispatchAPI("RichsPoliceEnhancements.CancelPriorityTraffic", new Utilities.VocalDispatchEventDelegate(VocalDispatchSaysPlayerIsCancelingPriorityTraffic));
             }
-
-            bool IsPluginLoaded(string pluginName) => Functions.GetAllUserPlugins().ToList().Any(a => a.FullName.Contains(pluginName));
 
             void InitAudioLoopFiber()
             {
