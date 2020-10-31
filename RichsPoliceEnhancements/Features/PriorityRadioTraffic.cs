@@ -25,6 +25,7 @@ namespace RichsPoliceEnhancements
             if (grammarPoliceInstalled)
             {
                 Game.LogTrivial("[RPE Priority Radio Traffic]: GrammarPolice is installed.");
+                Events.OnAction += Events_OnAction;
             }
             else if (vocalDispatchInstalled)
             {
@@ -37,6 +38,14 @@ namespace RichsPoliceEnhancements
             void InitAudioLoopFiber()
             {
                 TogglePRT(!PRT);
+            }
+        }
+
+        private static void Events_OnAction(string action)
+        {
+            if(action == "panic")
+            {
+                TogglePRT(true);
             }
         }
 
@@ -87,11 +96,13 @@ namespace RichsPoliceEnhancements
             if (PRT)
             {
                 Game.DisplayNotification($"~y~~h~DISPATCH - PRIORITY RADIO TRAFFIC ALERT~h~\n~s~~w~All units ~r~clear this channel~w~ for priority radio traffic.");
+                LSPD_First_Response.Mod.API.Functions.PlayScannerAudio($"ATTENTION_ALL_UNITS_0{new Random().Next(1,5)}");
                 GameFiber.Sleep(3000);
                 AudioLoop();
             }
             else if (!PRT)
             {
+                LSPD_First_Response.Mod.API.Functions.PlayScannerAudio($"ATTENTION_ALL_UNITS_0{new Random().Next(1, 5)}");
                 Game.DisplayNotification($"~y~~h~DISPATCH - PRIORITY RADIO TRAFFIC ALERT~h~\n~s~~w~All units be advised, priority radio traffic has been canceled.  This channel is now ~g~open.");
             }
         }
