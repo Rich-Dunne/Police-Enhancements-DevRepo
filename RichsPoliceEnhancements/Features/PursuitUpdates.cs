@@ -192,13 +192,12 @@ namespace RichsPoliceEnhancements
 
         private static void LoopPRTAudio()
         {
-            PriorityRadioTraffic.AudioLoop();
+            PriorityRadioTraffic.TogglePRT(true);
             while (Functions.GetActivePursuit() != null)
             {
                 GameFiber.Sleep(1000);
             }
-            PriorityRadioTraffic.PRT = false;
-            Game.DisplayNotification($"~y~~h~DISPATCH - PRIORITY RADIO TRAFFIC ALERT~h~\n~s~~w~All units be advised, priority radio traffic has been canceled.  This channel is now ~g~open~w~.");
+            PriorityRadioTraffic.TogglePRT(false);
         }
     }
 }
