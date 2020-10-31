@@ -85,22 +85,15 @@ namespace RichsPoliceEnhancements
                 Game.LogTrivial("[RPE]: BOLO is disabled.");
             }
 
-            if (DoesPluginExist("PoliceSmartRadio.dll"))
+            if (Settings.EnablePRT)
             {
-                if (Settings.EnablePRT)
-                {
-                    Game.LogTrivial("[RPE]: PriorityRadioTraffic is enabled.");
-                    GameFiber PRTFiber = new GameFiber(() => PriorityRadioTraffic.Main(DoesPluginExist("VocalDispatch.dll")), "RPE Priority Radio Traffic Fiber");
-                    PRTFiber.Start();
-                }
-                else
-                {
-                    Game.LogTrivial("[RPE]: PriorityRadioTraffic is disabled.");
-                }
+                Game.LogTrivial("[RPE]: PriorityRadioTraffic is enabled.");
+                GameFiber PRTFiber = new GameFiber(() => PriorityRadioTraffic.Main(DoesPluginExist("PoliceSmartRadio.dll"), DoesPluginExist("VocalDispatch.dll"), DoesPluginExist("GrammarPolice.dll")), "RPE Priority Radio Traffic Fiber");
+                PRTFiber.Start();
             }
             else
             {
-                Game.LogTrivial("[RPE]: PriorityRadioTraffic is disabled, PoliceSmartRadio is not installed.");
+                Game.LogTrivial("[RPE]: PriorityRadioTraffic is disabled.");
             }
 
             if (Settings.EnablePursuitUpdates)
