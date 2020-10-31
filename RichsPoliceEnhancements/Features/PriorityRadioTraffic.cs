@@ -1,26 +1,32 @@
 ﻿using System;
 using System.IO;
 using Rage;
-using LSPD_First_Response.Mod.API;
 using VocalDispatchAPIExample;
-using System.Linq;
-using System.Reflection;
-using System.Net;
+using GrammarPolice.API;
 
 namespace RichsPoliceEnhancements
 {
     internal static class PriorityRadioTraffic
     {
-        internal static bool PRT = false;
+        private static bool PRT = false, AudioLooping = false;
+        private static System.Media.SoundPlayer player = new System.Media.SoundPlayer(Directory.GetCurrentDirectory() + @"\lspdfr\audio\sfx\PRTTone.wav");
         internal static VocalDispatchHelper VDPRTRequest = new VocalDispatchHelper();
         internal static VocalDispatchHelper VDPRTCancel = new VocalDispatchHelper();
 
-        internal static void Main(bool vocalDispatchInstalled)
+        internal static void Main(bool policeSmartRadioInstalled, bool vocalDispatchInstalled, bool grammarPoliceInstalled)
         {
+            if (policeSmartRadioInstalled)
+            {
+                Game.LogTrivial("[RPE Priority Radio Traffic]: PoliceSmartRadio is installed.");
                 Action audioLoopAction = new Action(InitAudioLoopFiber);
                 PoliceSmartRadio.API.Functions.AddActionToButton(InitAudioLoopFiber, "prt");
+            }
 
-            if (vocalDispatchInstalled)
+            if (grammarPoliceInstalled)
+            {
+                Game.LogTrivial("[RPE Priority Radio Traffic]: GrammarPolice is installed.");
+            }
+            else if (vocalDispatchInstalled)
             {
                 Game.LogTrivial("[RPE Priority Radio Traffic]: VocalDispatch is installed.");
                 AppDomain.CurrentDomain.AssemblyResolve += new ResolveEventHandler(Utilities.ResolveAssemblyEventHandler);
@@ -30,8 +36,7 @@ namespace RichsPoliceEnhancements
 
             void InitAudioLoopFiber()
             {
-                GameFiber PRTLoopFiber = new GameFiber(() => AudioLoop());
-                PRTLoopFiber.Start();
+                TogglePRT(!PRT);
             }
         }
 
@@ -41,8 +46,7 @@ namespace RichsPoliceEnhancements
             //Game.DisplayNotification("VocalDispatch handled the request for priority radio traffic.");
             if (!PRT)
             {
-                GameFiber PRTLoopFiber = new GameFiber(() => AudioLoop());
-                PRTLoopFiber.Start();
+                TogglePRT(true);
             }
             else
             {
@@ -51,15 +55,13 @@ namespace RichsPoliceEnhancements
             return true;
         }
 
-        // This always fires and cannot use VD while priority traffic true
         private static bool VocalDispatchSaysPlayerIsCancelingPriorityTraffic() //You do not need to call this function. VocalDispatch calls it for you once you've set it up properly.
         {
             //Do your desired logic here. Returning false back to VocalDispatch will tell it to continue handling the request.
             //Game.DisplayNotification("VocalDispatch handled the request for canceling priority radio traffic.");
             if (PRT)
             {
-                GameFiber PRTLoopFiber = new GameFiber(() => AudioLoop());
-                PRTLoopFiber.Start();
+                TogglePRT(false);
             }
             else
             {
@@ -68,26 +70,43 @@ namespace RichsPoliceEnhancements
             return true;
         }
 
-        internal static void AudioLoop()
+        public static void TogglePRT(bool enabled)
         {
-            if (!PRT)
+            PRT = enabled;
+            if(PRT && AudioLooping)
+            {
+                Game.LogTrivial($"[RPE PRT]: Priority radio tone is already playing.");
+                return;
+            }
+            if(!PRT && !AudioLooping)
+            {
+                Game.LogTrivial($"[RPE PRT]: Priority radio tone is not playing.");
+                return;
+            }
+
+            if (PRT)
             {
                 Game.DisplayNotification($"~y~~h~DISPATCH - PRIORITY RADIO TRAFFIC ALERT~h~\n~s~~w~All units ~r~clear this channel~w~ for priority radio traffic.");
-                PRT = true;
                 GameFiber.Sleep(3000);
+                AudioLoop();
+            }
+            else if (!PRT)
+            {
+                Game.DisplayNotification($"~y~~h~DISPATCH - PRIORITY RADIO TRAFFIC ALERT~h~\n~s~~w~All units be advised, priority radio traffic has been canceled.  This channel is now ~g~open.");
+            }
+        }
+
+        private static void AudioLoop()
+        {
+            GameFiber.StartNew(() => {
                 while (PRT)
                 {
-                    GameFiber.Yield();
-                    System.Media.SoundPlayer player = new System.Media.SoundPlayer(Directory.GetCurrentDirectory() + @"\lspdfr\audio\sfx\PRTTone.wav");
+                    AudioLooping = true;
                     player.Play();
                     GameFiber.Sleep(Settings.PRTToneTimer * 1000);
                 }
-            }
-            else
-            {
-                Game.DisplayNotification($"~y~~h~DISPATCH - PRIORITY RADIO TRAFFIC ALERT~h~\n~s~~w~All units be advised, priority radio traffic has been canceled.  This channel is now ~g~open.");
-                PRT = false;
-            }
+                AudioLooping = false;
+            }, "PRT Audio Loop Fiber");
         }
     }
 }
