@@ -1,10 +1,38 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
+using LSPD_First_Response.Mod.API;
 using Rage;
 
 namespace RichsPoliceEnhancements
 {
     internal static class Settings
     {
+        internal enum EventFrequency
+        {
+            Common = 0,
+            Uncommon = 1,
+            Rare = 2
+        }
+
+        internal enum EventType 
+        { 
+            DrugDeal = 0,
+            DriveBy = 1,
+            CarJacking = 2,
+            Assault = 4,
+            RoadRage = 5,
+            PublicIntoxication = 6,
+            DUI = 7,
+            Prostitution = 8,
+            Protest = 9,
+            SuspiciousCircumstances = 10,
+            CriminalMischief = 11,
+            OfficerAmbush = 12,
+            CitizenAssist = 13,
+            MentalHealth = 14
+        }
+
+
         // Feature Settings
         internal static bool EnableAmbientBackup = false;
         internal static bool EnableAISirenCycle = false;
@@ -57,8 +85,8 @@ namespace RichsPoliceEnhancements
             EventCooldownTimer = ini.ReadInt32("Ambient Events", "EventCooldownTimer", 5);
             EventBlips = ini.ReadBoolean("Ambient Events", "EventBlips", true);
             CommonEventFrequency = ini.ReadInt32("Ambient Events", "CommonEventFrequency", 70);
-            UncommonEventFrequency = 100 - ini.ReadInt32("Ambient Events", "UnommonEventFrequency", 20);
-            RareEventFrequency = 100 - ini.ReadInt32("Ambient Events", "RareEventFrequency", 10);
+            UncommonEventFrequency = ini.ReadInt32("Ambient Events", "UnommonEventFrequency", 20);
+            RareEventFrequency = ini.ReadInt32("Ambient Events", "RareEventFrequency", 10);
             AssaultFrequency = ini.ReadString("Ambient Events", "AssaultFrequency", "common");
             eventFrequencies.Add("Assault", AssaultFrequency);
             CarJackingFrequency = ini.ReadString("Ambient Events", "CarJackingFrequency", "uncommon");
