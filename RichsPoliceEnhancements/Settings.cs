@@ -61,9 +61,12 @@ namespace RichsPoliceEnhancements
 
         // PRT Settings
         internal static int PRTToneTimer = 15;
+        internal static bool AutomaticPRT = false;
 
         // Pursuit Update Settings
         internal static int PursuitUpdateTimer = 20;
+        internal static bool DispatchUpdates = false;
+
         internal static readonly InitializationFile ini = new InitializationFile("Plugins/LSPDFR/RichsPoliceEnhancements.ini");
 
         internal static void LoadSettings()
@@ -101,10 +104,12 @@ namespace RichsPoliceEnhancements
             BOLOFrequency = ini.ReadInt32("BOLO Settings", "BOLOFrequency", 5);
 
             // PRT Settings
-            PRTToneTimer = ini.ReadInt32("PRT Settings", "PRTToneTimer", 15);
+            PRTToneTimer = ini.ReadInt32("Priority Radio Traffic Settings", "PRTToneTimer", 15);
+            AutomaticPRT = ini.ReadBoolean("Priority Radio Traffic Settings", "AutomaticPRT", false);
 
             // Pursuit Update Settings
             PursuitUpdateTimer = ini.ReadInt32("Pursuit Update Settings", "PursuitUpdateTimer", 20);
+            DispatchUpdates = ini.ReadBoolean("Pursuit Update Settings", "DispatchUpdates", false);
         }
     }
 }
