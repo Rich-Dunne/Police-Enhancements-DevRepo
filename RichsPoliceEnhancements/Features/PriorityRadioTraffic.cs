@@ -18,8 +18,7 @@ namespace RichsPoliceEnhancements
             if (policeSmartRadioInstalled)
             {
                 Game.LogTrivial("[RPE Priority Radio Traffic]: PoliceSmartRadio is installed.");
-                Action audioLoopAction = new Action(InitAudioLoopFiber);
-                PoliceSmartRadio.API.Functions.AddActionToButton(InitAudioLoopFiber, "prt");
+                AddButtonToPSR();
             }
 
             if (grammarPoliceInstalled)
@@ -38,6 +37,12 @@ namespace RichsPoliceEnhancements
             void InitAudioLoopFiber()
             {
                 TogglePRT(!PRT);
+            }
+
+            void AddButtonToPSR()
+            {
+                Action audioLoopAction = new Action(InitAudioLoopFiber);
+                PoliceSmartRadio.API.Functions.AddActionToButton(InitAudioLoopFiber, "prt");
             }
         }
 
