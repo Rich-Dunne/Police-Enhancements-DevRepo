@@ -7,32 +7,6 @@ namespace RichsPoliceEnhancements
 {
     internal static class Settings
     {
-        internal enum EventFrequency
-        {
-            Common = 0,
-            Uncommon = 1,
-            Rare = 2
-        }
-
-        internal enum EventType 
-        { 
-            DrugDeal = 0,
-            DriveBy = 1,
-            CarJacking = 2,
-            Assault = 4,
-            RoadRage = 5,
-            PublicIntoxication = 6,
-            DUI = 7,
-            Prostitution = 8,
-            Protest = 9,
-            SuspiciousCircumstances = 10,
-            CriminalMischief = 11,
-            OfficerAmbush = 12,
-            CitizenAssist = 13,
-            MentalHealth = 14
-        }
-
-
         // Feature Settings
         internal static bool EnableAmbientBackup = false;
         internal static bool EnableAISirenCycle = false;
