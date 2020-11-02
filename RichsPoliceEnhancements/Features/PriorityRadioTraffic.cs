@@ -3,6 +3,7 @@ using System.IO;
 using Rage;
 using VocalDispatchAPIExample;
 using GrammarPolice.API;
+using LSPD_First_Response.Mod.API;
 
 namespace RichsPoliceEnhancements
 {
@@ -15,6 +16,11 @@ namespace RichsPoliceEnhancements
 
         internal static void Main(bool policeSmartRadioInstalled, bool vocalDispatchInstalled, bool grammarPoliceInstalled)
         {
+            if (Settings.AutomaticPRT)
+            {
+                LSPD_First_Response.Mod.API.Events.OnPursuitStarted += OnPursuitStarted;
+            }
+
             if (policeSmartRadioInstalled)
             {
                 Game.LogTrivial("[RPE Priority Radio Traffic]: PoliceSmartRadio is installed.");
@@ -24,7 +30,7 @@ namespace RichsPoliceEnhancements
             if (grammarPoliceInstalled)
             {
                 Game.LogTrivial("[RPE Priority Radio Traffic]: GrammarPolice is installed.");
-                Events.OnAction += Events_OnAction;
+                GrammarPolice.API.Events.OnAction += Events_OnAction;
             }
             else if (vocalDispatchInstalled)
             {
@@ -48,7 +54,7 @@ namespace RichsPoliceEnhancements
 
         private static void Events_OnAction(string action)
         {
-            if(action == "panic")
+            if (action == "panic" && Settings.AutomaticPRT)
             {
                 TogglePRT(true);
             }
@@ -87,12 +93,12 @@ namespace RichsPoliceEnhancements
         public static void TogglePRT(bool enabled)
         {
             PRT = enabled;
-            if(PRT && AudioLooping)
+            if (PRT && AudioLooping)
             {
                 Game.LogTrivial($"[RPE PRT]: Priority radio tone is already playing.");
                 return;
             }
-            if(!PRT && !AudioLooping)
+            if (!PRT && !AudioLooping)
             {
                 Game.LogTrivial($"[RPE PRT]: Priority radio tone is not playing.");
                 return;
@@ -101,7 +107,7 @@ namespace RichsPoliceEnhancements
             if (PRT)
             {
                 Game.DisplayNotification($"~y~~h~DISPATCH - PRIORITY RADIO TRAFFIC ALERT~h~\n~s~~w~All units ~r~clear this channel~w~ for priority radio traffic.");
-                LSPD_First_Response.Mod.API.Functions.PlayScannerAudio($"ATTENTION_ALL_UNITS_0{new Random().Next(1,5)}");
+                LSPD_First_Response.Mod.API.Functions.PlayScannerAudio($"ATTENTION_ALL_UNITS_0{new Random().Next(1, 5)}");
                 GameFiber.Sleep(3000);
                 AudioLoop();
             }
@@ -114,7 +120,8 @@ namespace RichsPoliceEnhancements
 
         private static void AudioLoop()
         {
-            GameFiber.StartNew(() => {
+            GameFiber.StartNew(() =>
+            {
                 while (PRT)
                 {
                     AudioLooping = true;
@@ -123,6 +130,19 @@ namespace RichsPoliceEnhancements
                 }
                 AudioLooping = false;
             }, "PRT Audio Loop Fiber");
+        }
+
+        private static void OnPursuitStarted(LHandle pursuit)
+        {
+            GameFiber.StartNew(() =>
+            {
+                TogglePRT(true);
+                while (LSPD_First_Response.Mod.API.Functions.GetActivePursuit() != null)
+                {
+                    GameFiber.Sleep(1000);
+                }
+                TogglePRT(false);
+            });
         }
     }
 }

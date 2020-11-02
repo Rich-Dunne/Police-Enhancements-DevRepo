@@ -31,14 +31,6 @@ namespace RichsPoliceEnhancements
             List<Vehicle> vehiclesList = new List<Vehicle>();
 
             Game.LogTrivial($"[RPE Pursuit Update]: Pursuit started");
-            if (Settings.EnablePRT && Settings.AutomaticPRT)
-            {
-                GameFiber.StartNew(() =>
-                {
-                    LoopPRTAudio();
-                });
-            }
-
             GameFiber.StartNew(() =>
             {
                 GameFiber.Sleep(5000);
@@ -200,16 +192,6 @@ namespace RichsPoliceEnhancements
                 }
                 return "~w~";
             }
-        }
-
-        private static void LoopPRTAudio()
-        {
-            PriorityRadioTraffic.TogglePRT(true);
-            while (Functions.GetActivePursuit() != null)
-            {
-                GameFiber.Sleep(1000);
-            }
-            PriorityRadioTraffic.TogglePRT(false);
         }
     }
 }
