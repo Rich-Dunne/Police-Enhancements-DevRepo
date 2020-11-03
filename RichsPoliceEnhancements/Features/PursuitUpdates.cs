@@ -10,6 +10,7 @@ namespace RichsPoliceEnhancements
     {
         private static Vehicle suspectVeh;
         private static int NotificationTimer = Settings.PursuitUpdateTimer *= 1000;
+        private static string[] arrestedAudio = new string[] {"SUSPECT_APPREHENDED", "SUSPECT_ARRESTED", "SUSPECT_IN_CUSTODY"};
 
         private enum Direction
         {
@@ -64,18 +65,40 @@ namespace RichsPoliceEnhancements
 
         private static void NotificationUpdater(Ped suspect, List<Vehicle> vehiclesList, int suspectNumber)
         {
+            bool suspectVisualLost = false;
             suspectNumber++;
             Game.LogTrivial($"[RPE Pursuit Update]: Notifications running for suspect #{suspectNumber}");
 
-            while (Functions.GetActivePursuit() != null)
+            while (true)
             {
-                if (!suspect || !suspect.IsAlive || Functions.IsPedArrested(suspect))
+                if (!suspect)
                 {
-                    Game.LogTrivial($"[RPE Pursuit Update]: Suspect is invalid, dead, or arrested.  Stopping notifications.");
+                    Game.LogTrivial($"[RPE Pursuit Update]: Suspect is invalid.  Stopping notifications.");
                     break;
                 }
-                if (Functions.GetActivePursuit() != null && Functions.IsPedVisualLost(suspect))
+                if (!suspect.IsAlive)
                 {
+                    Game.LogTrivial($"[RPE Pursuit Update]: Suspect is dead.  Stopping notifications.");
+                    Functions.PlayScannerAudio($"ATTENTION_ALL_UNITS SUSPECT_NEUTRALIZED");
+                    break;
+                }
+                if(Functions.IsPedGettingArrested(suspect) || Functions.IsPedArrested(suspect))
+                {
+                    Game.LogTrivial($"[RPE Pursuit Update]: Suspect is arrested.  Stopping notifications.");
+                    Functions.PlayScannerAudio($"ATTENTION_ALL_UNITS {arrestedAudio[new Random().Next(arrestedAudio.Length)]}");
+                    break;
+                }
+                if (suspectVisualLost && !Functions.IsPedVisualLost(suspect))
+                {
+                    suspectVisualLost = false;
+                }
+                if (Functions.IsPedVisualLost(suspect))
+                {
+                    if (!suspectVisualLost)
+                    {
+                        Functions.PlayScannerAudio($"ATTENTION_ALL_UNITS EVADED ALL_UNITS_ATTEMPT_TO_REAQUIRE");
+                        suspectVisualLost = true;
+                    }
                     Game.LogTrivial($"[RPE Pursuit Update]: Visual lost for suspect.  No notifications will be given until visual is regained.");
                     GameFiber.Sleep(NotificationTimer);
                     continue;
@@ -110,9 +133,14 @@ namespace RichsPoliceEnhancements
                         Game.DisplayNotification($"~y~Automatic Pursuit Updates\n~w~Suspect {suspectNumber} is running ~b~{(Direction)direction} ~w~on ~b~{streetName}~w~.");
                     }
                 }
+
+                if(Functions.GetActivePursuit() == null)
+                {
+                    Game.LogTrivial($"[RPE Pursuit Update]: Pursuit is over.  Stopping notifications.");
+                    break;
+                }
                 GameFiber.Sleep(NotificationTimer);
             }
-            Game.LogTrivial("[RPE Pursuit Update]: Outside of notification loop, pursuit should be over.");
 
             int GetSuspectDirection()
             {
