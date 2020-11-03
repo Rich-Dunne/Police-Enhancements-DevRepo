@@ -30,14 +30,12 @@ namespace RichsPoliceEnhancements
             if (grammarPoliceInstalled)
             {
                 Game.LogTrivial("[RPE Priority Radio Traffic]: GrammarPolice is installed.");
-                GrammarPolice.API.Events.OnAction += Events_OnAction;
+                HandleGPActionEvent();
             }
             else if (vocalDispatchInstalled)
             {
                 Game.LogTrivial("[RPE Priority Radio Traffic]: VocalDispatch is installed.");
-                AppDomain.CurrentDomain.AssemblyResolve += new ResolveEventHandler(Utilities.ResolveAssemblyEventHandler);
-                VDPRTRequest.SetupVocalDispatchAPI("RichsPoliceEnhancements.RequestPriorityTraffic", new Utilities.VocalDispatchEventDelegate(VocalDispatchSaysPlayerIsRequestingPriorityTraffic));
-                VDPRTCancel.SetupVocalDispatchAPI("RichsPoliceEnhancements.CancelPriorityTraffic", new Utilities.VocalDispatchEventDelegate(VocalDispatchSaysPlayerIsCancelingPriorityTraffic));
+                HandleVDFunctions();
             }
 
             void InitAudioLoopFiber()
@@ -49,6 +47,18 @@ namespace RichsPoliceEnhancements
             {
                 Action audioLoopAction = new Action(InitAudioLoopFiber);
                 PoliceSmartRadio.API.Functions.AddActionToButton(InitAudioLoopFiber, "prt");
+            }
+
+            void HandleGPActionEvent()
+            {
+                GrammarPolice.API.Events.OnAction += Events_OnAction;
+            }
+
+            void HandleVDFunctions()
+            {
+                AppDomain.CurrentDomain.AssemblyResolve += new ResolveEventHandler(Utilities.ResolveAssemblyEventHandler);
+                VDPRTRequest.SetupVocalDispatchAPI("RichsPoliceEnhancements.RequestPriorityTraffic", new Utilities.VocalDispatchEventDelegate(VocalDispatchSaysPlayerIsRequestingPriorityTraffic));
+                VDPRTCancel.SetupVocalDispatchAPI("RichsPoliceEnhancements.CancelPriorityTraffic", new Utilities.VocalDispatchEventDelegate(VocalDispatchSaysPlayerIsCancelingPriorityTraffic));
             }
         }
 
@@ -107,13 +117,13 @@ namespace RichsPoliceEnhancements
             if (PRT)
             {
                 Game.DisplayNotification($"~y~~h~DISPATCH - PRIORITY RADIO TRAFFIC ALERT~h~\n~s~~w~All units ~r~clear this channel~w~ for priority radio traffic.");
-                LSPD_First_Response.Mod.API.Functions.PlayScannerAudio($"ATTENTION_ALL_UNITS_0{new Random().Next(1, 5)}");
+                LSPD_First_Response.Mod.API.Functions.PlayScannerAudio($"ATTENTION_THIS_IS_DISPATCH");
                 GameFiber.Sleep(3000);
                 AudioLoop();
             }
             else if (!PRT)
             {
-                LSPD_First_Response.Mod.API.Functions.PlayScannerAudio($"ATTENTION_ALL_UNITS_0{new Random().Next(1, 5)}");
+                LSPD_First_Response.Mod.API.Functions.PlayScannerAudio($"ATTENTION_THIS_IS_DISPATCH");
                 Game.DisplayNotification($"~y~~h~DISPATCH - PRIORITY RADIO TRAFFIC ALERT~h~\n~s~~w~All units be advised, priority radio traffic has been canceled.  This channel is now ~g~open.");
             }
         }
