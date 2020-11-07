@@ -21,7 +21,7 @@ namespace RichsPoliceEnhancements
                     {
                         return;
                     }
-                    var suspectVeh = Functions.GetPursuitPeds(pursuit).Where(p => p && p.IsAlive).FirstOrDefault().CurrentVehicle;
+                    var suspectVeh = Functions.GetPursuitPeds(pursuit).Where(p => p && p.IsAlive).FirstOrDefault()?.CurrentVehicle;
 
                     if (suspectVeh && suspectVeh.HasDriver && suspectVeh.Speed > 0 && suspectVeh.FuelLevel > 0 && suspectVeh.Health > 0)
                     {
