@@ -10,9 +10,12 @@ namespace RichsPoliceEnhancements
         {
             while (true)
             {
-                bool PursuitOrCalloutActive = Functions.GetCurrentPullover() != null || Functions.IsCalloutRunning() || Functions.GetActivePursuit() != null;
+                //bool PursuitOrCalloutActive = Functions.GetCurrentPullover() != null || Functions.IsCalloutRunning() || Functions.GetActivePursuit() != null;
+                bool isCalloutRunning = Functions.IsCalloutRunning();
+                bool isCurrentPulloverActive = Functions.GetCurrentPullover() != null;
+                bool isPursuitActive = Functions.GetActivePursuit() != null;
 
-                if (Game.LocalPlayer.Character.LastVehicle || Game.LocalPlayer.Character.CurrentVehicle && PursuitOrCalloutActive)
+                if (Game.LocalPlayer.Character.LastVehicle && (isCalloutRunning || isCurrentPulloverActive || isPursuitActive))
                 {
                     foreach (Vehicle policeVeh in Game.LocalPlayer.Character.GetNearbyVehicles(16).Where(v => v && v.IsPoliceVehicle && v != Game.LocalPlayer.Character.CurrentVehicle && v != Game.LocalPlayer.Character.LastVehicle && v.DistanceTo2D(Game.LocalPlayer.Character.LastVehicle) <= 100f && v.IsSirenOn))
                     {
