@@ -7,32 +7,28 @@ namespace RichsPoliceEnhancements
 {
     internal static class TVI
     {
-        private static bool alreadyRunning = false;
+        private static bool _alreadyRunning = false;
 
         internal static void Main()
         {
             while (true)
             {
-                if (Functions.GetActivePursuit() == null && alreadyRunning)
+                var pursuit = Functions.GetActivePursuit();
+                if (pursuit == null)
                 {
-                    alreadyRunning = false;
+                    //Game.LogTrivial($"[RPE TVI]: Pursuit is null.");
+                    _alreadyRunning = false;
                 }
-                if (Functions.GetActivePursuit() != null && !alreadyRunning)
+                else if (pursuit != null && !_alreadyRunning)
                 {
-                    Game.LogTrivial("[RPE TVI]: Player is in pursuit.");
-                    var pursuit = Functions.GetActivePursuit();
-                    if(pursuit == null)
-                    {
-                        return;
-                    }
                     var suspectVeh = Functions.GetPursuitPeds(pursuit).Where(p => p && p.IsAlive).FirstOrDefault()?.CurrentVehicle;
 
                     if (suspectVeh && suspectVeh.HasDriver && suspectVeh.Speed > 0 && suspectVeh.FuelLevel > 0 && suspectVeh.Health > 0)
                     {
                         Game.LogTrivial("[RPE TVI]: Starting disable check loop.");
-                        GameFiber DisabledCheckFiber = new GameFiber(() => VehicleDisableCheck(pursuit, suspectVeh));
+                        GameFiber DisabledCheckFiber = new GameFiber(() => VehicleDisableCheck(pursuit, suspectVeh), "RPE TVI Disable Check Fiber");
                         DisabledCheckFiber.Start();
-                        alreadyRunning = true;
+                        _alreadyRunning = true;
                     }
                 }
                 GameFiber.Sleep(5000);
@@ -48,14 +44,14 @@ namespace RichsPoliceEnhancements
                 if (!Game.LocalPlayer.Character.IsAlive)
                 {
                     Game.LogTrivial($"[RPE TVI]: Player is dead.");
-                    alreadyRunning = false;
+                    _alreadyRunning = false;
                     return;
                 }
 
                 if (!suspectVeh || !suspectVeh.Driver || !suspectVeh.Driver.IsAlive)
                 {
                     Game.LogTrivial($"[RPE TVI]: Suspect vehicle or driver is null or dead.");
-                    alreadyRunning = false;
+                    _alreadyRunning = false;
                     return;
                 }
 
@@ -79,7 +75,7 @@ namespace RichsPoliceEnhancements
                             suspectVeh.EngineHealth = 20;
                             suspectVeh.IsDriveable = false;
                             suspectVeh.FuelLevel = 0;
-                            alreadyRunning = false;
+                            _alreadyRunning = false;
                             return;
                         }
                     }
@@ -91,7 +87,7 @@ namespace RichsPoliceEnhancements
                     return Math.Min((originalHeading - newHeading) < 0 ? originalHeading - newHeading + 360 : originalHeading - newHeading, (newHeading - originalHeading) < 0 ? newHeading - originalHeading + 360 : newHeading - originalHeading);
 }
             }
-            alreadyRunning = false;
+            _alreadyRunning = false;
         }
     }
 }
