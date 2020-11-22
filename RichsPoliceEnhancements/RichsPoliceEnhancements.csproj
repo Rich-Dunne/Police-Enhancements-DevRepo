@@ -31,6 +31,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="GrammarPolice">
+      <HintPath>..\..\..\Core Plugins\Grammar Police\Grand Theft Auto V\plugins\LSPDFR\GrammarPolice.dll</HintPath>
+    </Reference>
     <Reference Include="LSPD First Response">
       <HintPath>..\..\Modding Resources\References\LSPD First Response.dll</HintPath>
     </Reference>
@@ -58,7 +61,7 @@
   <ItemGroup>
     <Compile Include="Features\AISirenCycle.cs" />
     <Compile Include="Features\AmbientBackup.cs" />
-    <Compile Include="Features\Ambient Events\EventSelect.cs" />
+    <Compile Include="Features\Ambient Events\AmbientEvent.cs" />
     <Compile Include="Features\Ambient Events\Events\AssaultEventFunctions.cs" />
     <Compile Include="Features\BOLO.cs" />
     <Compile Include="Features\Ambient Events\Events\CarJackingEventFunctions.cs" />
@@ -66,7 +69,7 @@
     <Compile Include="Features\Ambient Events\Events\DrugDealEventFunctions.cs" />
     <Compile Include="EntryPoint.cs" />
     <Compile Include="Features\Ambient Events\EventPed.cs" />
-    <Compile Include="Features\AmbientEvent.cs" />
+    <Compile Include="Features\AmbientEvents.cs" />
     <Compile Include="Features\Ambient Events\EventVehicle.cs" />
     <Compile Include="Features\PriorityRadioTraffic.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

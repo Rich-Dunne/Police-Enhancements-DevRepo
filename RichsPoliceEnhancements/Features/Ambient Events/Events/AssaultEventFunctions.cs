@@ -39,7 +39,7 @@ namespace RichsPoliceEnhancements
                 suspectBlip.Scale = 0.75f;
                 eventBlips.Add(suspectBlip);*/
 
-                eventPeds.Add(new EventPed("Assault", suspect));
+                //eventPeds.Add(new EventPed("Assault", suspect));
                 Game.LogTrivial($"[Rich Ambiance] Suspect found.");
                 return suspect;
             }
@@ -49,25 +49,25 @@ namespace RichsPoliceEnhancements
 
         private static Ped FindVictim(List<Ped> pedList, List<EventPed> eventPeds)
         {
-            Ped suspect = eventPeds[0].Ped;
+            var suspect = eventPeds[0];
             Ped victim;
-            List<Ped> sortedList = pedList.OrderBy(p => p.DistanceTo(suspect)).ToList();
+            List<Ped> sortedList = pedList.OrderBy(p => p.DistanceTo(suspect.Ped)).ToList();
 
             foreach (Ped p in sortedList)
             {
-                if (p.IsOnFoot && p.DistanceTo(suspect) > 0 && p.DistanceTo(suspect) <= 15f)
+                if (p.IsOnFoot && p.DistanceTo(suspect.Ped) > 0 && p.DistanceTo(suspect.Ped) <= 15f)
                 {
                     victim = p;
                     victim.IsPersistent = true;
                     victim.BlockPermanentEvents = true;
-                    eventPeds.Add(new EventPed("Assault", victim));
+                    //eventPeds.Add(new EventPed("Assault", victim));
                     Game.LogTrivial($"[Rich Ambiance] Victim found.");
                     return victim;
                 }
             }
-            suspect.IsPersistent = false;
-            suspect.Tasks.Clear();
-            suspect.Dismiss();
+            suspect.Ped.IsPersistent = false;
+            suspect.Ped.Tasks.Clear();
+            suspect.Ped.Dismiss();
 
             Game.LogTrivial($"[Rich Ambiance] No victims found close enough to suspect.");
             return null;
@@ -81,10 +81,10 @@ namespace RichsPoliceEnhancements
             suspect.Tasks.FightAgainst(victim);
 
             Game.LogTrivial($"[Rich Ambiance] Waiting for suspect to attack victim.");
-            while (!victim.HasBeenDamagedBy(suspect) && !AmbientEvent.PrematureEndCheck(eventPeds))
-            {
-                GameFiber.Yield();
-            }
+            //while (!victim.HasBeenDamagedBy(suspect) && !AmbientEvent.PrematureEndCheck(eventPeds))
+            //{
+            //    GameFiber.Yield();
+            //}
 
             if (Settings.EventBlips)
             {
@@ -108,10 +108,10 @@ namespace RichsPoliceEnhancements
             }
 
             Game.LogTrivial($"[Rich Ambiance] PrematureEndCheck looping.");
-            while (!AmbientEvent.PrematureEndCheck(eventPeds))
-            {
-                GameFiber.Sleep(1000);
-            }
+            //while (!AmbientEvent.PrematureEndCheck(eventPeds))
+            //{
+            //    GameFiber.Sleep(1000);
+            //}
         }
     }
 }

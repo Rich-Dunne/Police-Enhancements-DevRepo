@@ -35,7 +35,7 @@ namespace RichsPoliceEnhancements
                     //Blip blip = driver.AttachBlip();
                     //blip.Color = Color.Red;
                     //blips.Add(blip);
-                    eventPeds.Add(new EventPed("DriveBy", driver));
+                    //eventPeds.Add(new EventPed("DriveBy", driver));
                     return driver;
                 }
             }
@@ -65,7 +65,7 @@ namespace RichsPoliceEnhancements
                     eventBlips.Add(blip);
 
 
-                    eventPeds.Add(new EventPed("DriveBy", target));
+                    //eventPeds.Add(new EventPed("DriveBy", target));
                     Game.LogTrivial($"[Rich Ambiance] Target found.");
                     return target;
                 }
@@ -118,10 +118,10 @@ namespace RichsPoliceEnhancements
             Game.LogTrivial($"[Rich Ambiance] Done assigning tasks.");
 
             // We run this loop so the event stays active until something happens.  Don't want to start another event while the player is still interacting with this one.
-            while (!AmbientEvent.PrematureEndCheck(eventPeds, eventVehicles))
-            {
-                GameFiber.Yield();
-            }
+            //while (!AmbientEvent.PrematureEndCheck(eventPeds, eventVehicles))
+            //{
+            //    GameFiber.Yield();
+            //}
         }
     }
 }
