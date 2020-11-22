@@ -7,7 +7,6 @@ namespace RichsPoliceEnhancements
 {
     internal class SilentBackup
     {
-        private static List<Vehicle> _backupUnits = new List<Vehicle>();
         internal static void Main()
         {
             while (true)
