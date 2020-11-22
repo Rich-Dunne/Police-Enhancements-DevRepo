@@ -13,6 +13,10 @@ namespace RichsPoliceEnhancements
         {
             while (true)
             {
+                if (Functions.GetActivePursuit() == null && alreadyRunning)
+                {
+                    alreadyRunning = false;
+                }
                 if (Functions.GetActivePursuit() != null && !alreadyRunning)
                 {
                     Game.LogTrivial("[RPE TVI]: Player is in pursuit.");
