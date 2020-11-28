@@ -31,7 +31,7 @@ namespace RichsPoliceEnhancements
                 CreateBlip();
             }
             Event.EventPeds.Add(this);
-            Game.LogTrivial($"Ped location: {Ped.Position}");
+            //Game.LogTrivial($"Ped location: {Ped.Position}");
         }
 
         private void SetPersistence()
