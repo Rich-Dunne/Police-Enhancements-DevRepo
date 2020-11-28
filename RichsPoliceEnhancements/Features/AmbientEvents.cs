@@ -8,8 +8,8 @@ namespace RichsPoliceEnhancements
 {
     class AmbientEvents
     {
-
-        private static AmbientEvent ambientEvent;
+        private static bool _eventActive = false;
+        internal static AmbientEvent ambientEvent;
 
         internal enum EventFrequency
         {
@@ -20,7 +20,6 @@ namespace RichsPoliceEnhancements
 
         internal static void Main()
         {
-            AppDomain.CurrentDomain.DomainUnload += TerminationHandler;
             var commonEvents = Settings.eventFrequencies.Where(x => x.Value == "common").Select(x => x.Key).ToList();
             var uncommonEvents = Settings.eventFrequencies.Where(x => x.Value == "uncommon").Select(x => x.Key).ToList();
             var rareEvents = Settings.eventFrequencies.Where(x => x.Value == "rare").Select(x => x.Key).ToList();
@@ -32,95 +31,99 @@ namespace RichsPoliceEnhancements
 
         private static void BeginLoopingForEvents(List<string> commonEvents, List<string> uncommonEvents, List<string> rareEvents)
         { 
-            bool eventActive = false;
-
             Game.LogTrivial($"[RPE Ambient Event]: Pre-event loop initialized.");
             while (true)
             {
                 GameFiber.Sleep(20000); //20000 for testing or Settings.EventCooldownTimer for release
-                if (!PlayerIsBusy() && !eventActive)
+                if(PlayerIsBusy())
                 {
-                    SelectEvent();
+                    Game.LogTrivial($"[RPE Ambient Event]: The player is busy, try again later.");
+                    continue;
                 }
+                if (_eventActive)
+                {
+                    Game.LogTrivial($"[RPE Ambient Event]: An event is already running.");
+                    continue;
+                }
+
+                SelectEvent();
             }
 
             bool PlayerIsBusy()
             {
                 if (Functions.IsCalloutRunning())
                 {
-                    Game.LogTrivial($"[RPE Ambient Event] Player busy, callout running/being dispatched.");
+                    Game.LogTrivial($"[RPE Ambient Event]: Player busy, callout running/being dispatched.");
                     return true;
                 }
                 else if (Functions.GetActivePursuit() != null)
                 {
-                    Game.LogTrivial($"[RPE Ambient Event] Player busy, pursuit active.");
+                    Game.LogTrivial($"[RPE Ambient Event]: Player busy, pursuit active.");
                     return true;
                 }
                 else if (Functions.IsPlayerAvailableForCalls())
                 {
-                    Game.LogTrivial($"[RPE Ambient Event] Player not busy.");
+                    Game.LogTrivial($"[RPE Ambient Event]: Player not busy.");
                     return false;
                 }
                 else
                 {
-                    Game.LogTrivial($"[RPE Ambient Event] Player busy state not recognized.");
+                    Game.LogTrivial($"[RPE Ambient Event]: Player busy state not recognized.");
                     return false;
                 }
             }
 
             void SelectEvent()
             {
-                int randomValue = GetRandomNumber(100);
-                Game.LogTrivial($"[RPE Ambient Event] Choosing random event ({randomValue}).");
-                if (randomValue > Settings.UncommonEventFrequency)
+                var randomValue = 40; // GetRandomNumber(100);
+                Game.LogTrivial($"[RPE Ambient Event]: Choosing random event ({randomValue}).");
+                if (randomValue <= Settings.CommonEventFrequency && commonEvents.Count > 0)
                 {
                     var commonEvent = commonEvents[new Random().Next(commonEvents.Count)];
                     if (string.IsNullOrEmpty(commonEvent))
                     {
-                        Game.LogTrivial($"[RPE Ambient Event] No common event found.");
+                        Game.LogTrivial($"[RPE Ambient Event]: No common event found.");
                         return;
                     }
-
+                    Game.LogTrivial($"[RPE Ambient Event]: Starting {commonEvent} event.");
                     EventType eventType = (EventType)Enum.Parse(typeof(EventType), commonEvent);
                     ambientEvent = new AmbientEvent(eventType);
                 }
-                else if (randomValue <= Settings.UncommonEventFrequency && randomValue > Settings.RareEventFrequency)
+                else if (randomValue > Settings.CommonEventFrequency && randomValue <= Settings.CommonEventFrequency + Settings.UncommonEventFrequency && uncommonEvents.Count > 0)
                 {
                     var uncommonEvent = uncommonEvents[new Random().Next(uncommonEvents.Count)];
                     if (string.IsNullOrEmpty(uncommonEvent))
                     {
-                        Game.LogTrivial($"[RPE Ambient Event] No uncommon event found.");
+                        Game.LogTrivial($"[RPE Ambient Event]: No uncommon event found.");
                         return;
                     }
-
+                    Game.LogTrivial($"[RPE Ambient Event]: Starting {uncommonEvent} event.");
                     EventType eventType = (EventType)Enum.Parse(typeof(EventType), uncommonEvent);
                     new AmbientEvent(eventType);
                 }
-                else if (randomValue <= Settings.RareEventFrequency)
+                else if (randomValue > Settings.CommonEventFrequency + Settings.UncommonEventFrequency && rareEvents.Count > 0)
                 {
                     var rareEvent = rareEvents[new Random().Next(rareEvents.Count)];
                     if (string.IsNullOrEmpty(rareEvent))
                     {
-                        Game.LogTrivial($"[RPE Ambient Event] No rare event found.");
+                        Game.LogTrivial($"[RPE Ambient Event]: No rare event found.");
                         return;
                     }
-
+                    Game.LogTrivial($"[RPE Ambient Event]: Starting {rareEvent} event.");
                     EventType eventType = (EventType)Enum.Parse(typeof(EventType), rareEvent);
                     new AmbientEvent(eventType);
                 }
+                Game.LogTrivial($"[RPE Ambient Event]: Setting _eventActive to true");
+                _eventActive = true;
             }
 
-            int GetRandomNumber(int maxValue) => new Random().Next(0, maxValue);
+            int GetRandomNumber(int maxValue) => new Random().Next(1, maxValue);
         }
 
-        private static void TerminationHandler(object sender, EventArgs e)
+        internal static void SetEventActiveFalse()
         {
-            if(ambientEvent != null)
-            {
-                ambientEvent.Cleanup();
-            }
-
-            Game.LogTrivial("[RPE Ambient Event]: Plugin terminated.");
+            _eventActive = false;
+            Game.LogTrivial($"[RPE Ambient Event]: _eventActive is {_eventActive}");
         }
     }
 }
