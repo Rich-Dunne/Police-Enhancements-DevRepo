@@ -1,14 +1,16 @@
 ﻿using System.Collections.Generic;
 using Rage;
 using System.Linq;
+using System;
 
 namespace RichsPoliceEnhancements
 {
     internal enum EventType
     {
-        DrugDeal = 0,
-        DriveBy = 1,
-        CarJacking = 2,
+        None = 0,
+        DrugDeal = 1,
+        DriveBy = 2,
+        CarJacking = 3,
         Assault = 4,
         RoadRage = 5,
         PublicIntoxication = 6,
@@ -31,6 +33,7 @@ namespace RichsPoliceEnhancements
 
         internal AmbientEvent(EventType eventType)
         {
+            AppDomain.CurrentDomain.DomainUnload += TerminationHandler;
             EventType = eventType;
             RunEventFunctions(eventType);
         }
@@ -48,7 +51,7 @@ namespace RichsPoliceEnhancements
         internal void Cleanup()
         {
             // Clean up EventBlips
-            foreach (Blip blip in EventBlips)
+            foreach (Blip blip in EventBlips.Where(b => b))
             {
                 blip.Delete();
             }
@@ -57,7 +60,7 @@ namespace RichsPoliceEnhancements
             // Clean up EventPeds
             foreach (EventPed EP in EventPeds.Where(x => x.Ped))
             {
-                foreach (Blip blip in EP.Ped.GetAttachedBlips())
+                foreach (Blip blip in EP.Ped.GetAttachedBlips().Where(b => b))
                 {
                     blip.Delete();
                 }
@@ -68,10 +71,19 @@ namespace RichsPoliceEnhancements
 
             // Clean up EventVehicles
             //foreach (EventVehicle vehicle in EventVehicles.Where(x => x.))
-            
+
             //    vehicle.IsPersistent = false;
             //}
             //EventVehicles.Clear();
+
+            AmbientEvents.SetEventActiveFalse();
+            AppDomain.CurrentDomain.DomainUnload -= TerminationHandler;
+        }
+
+        private void TerminationHandler(object sender, EventArgs e)
+        {
+            Cleanup();
+            Game.LogTrivial("[RPE Ambient Event]: Plugin terminated.");
         }
     }
 }
