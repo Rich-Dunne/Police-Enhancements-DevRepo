@@ -4,7 +4,7 @@ using System.Linq;
 using Rage;
 using LSPD_First_Response.Mod.API;
 
-namespace RichsPoliceEnhancements
+namespace RichsPoliceEnhancements.Features
 {
     public class AISirenCycle
     {
@@ -28,7 +28,7 @@ namespace RichsPoliceEnhancements
 
                 if (pursuit != null && Functions.GetActivePursuit() == null)
                 {
-                    Game.LogTrivial("[RPE AI Siren Cycle]: pursuit variable is not null, but the pursuit is no longer running");
+                    Game.LogTrivial("[RPE AI Siren Cycle]: Pursuit is no longer running");
                     pursuit = null;
                     pursuitVehicles.Clear();
                     pursuitCopsCollectorStarted = false;

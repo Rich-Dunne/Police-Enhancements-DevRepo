@@ -6,8 +6,9 @@ using Rage;
 using LSPD_First_Response.Mod.API;
 using LSPD_First_Response.Engine.Scripting.Entities;
 using System.IO;
+using RichsPoliceEnhancements.Utils;
 
-namespace RichsPoliceEnhancements
+namespace RichsPoliceEnhancements.Features
 {
     // TODO:
     // - Camera focus on BOLO if nearby

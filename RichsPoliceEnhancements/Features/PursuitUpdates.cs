@@ -4,7 +4,7 @@ using Rage;
 using LSPD_First_Response.Mod.API;
 using System.Linq;
 
-namespace RichsPoliceEnhancements
+namespace RichsPoliceEnhancements.Features
 {
     public class PursuitUpdates
     {
