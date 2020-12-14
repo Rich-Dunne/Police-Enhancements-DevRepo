@@ -3,6 +3,7 @@ using LSPD_First_Response.Mod.API;
 using System.Reflection;
 using System.Linq;
 using System.IO;
+using RichsPoliceEnhancements.Features;
 
 [assembly: Rage.Attributes.Plugin("Rich's Police Enhancements", Author = "Rich", Description = "Quality of life features for police AI", PrefersSingleInstance = true)]
 
@@ -107,6 +108,18 @@ namespace RichsPoliceEnhancements
                 {
                     Game.LogTrivial("[RPE]: AutomaticPursuitUpdates is disabled.");
                 }
+
+                if (Settings.EnableSuspectStamina)
+                {
+                    Game.LogTrivial("[RPE]: SuspectStamina is enabled.");
+                    GameFiber SuspectStamina = new GameFiber(() => SuspectStamina.Main(), "RPE Suspect Stamina Fiber");
+                    SuspectStamina.Start();
+                }
+                else
+                {
+                    Game.LogTrivial("[RPE]: SuspectStamina is disabled.");
+                }
+
 
                 GetAssemblyVersion();
             }
