@@ -1,6 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
-using LSPD_First_Response.Mod.API;
 using Rage;
 
 namespace RichsPoliceEnhancements
@@ -16,6 +14,7 @@ namespace RichsPoliceEnhancements
         internal static bool EnablePRT = false;
         internal static bool EnablePursuitUpdates = false;
         internal static bool EnableAmbientEvents = false;
+        internal static bool EnableSuspectStamina = false;
 
         // Ambient Event settings
         internal static Dictionary<string, string> eventFrequencies = new Dictionary<string, string>();
@@ -24,10 +23,10 @@ namespace RichsPoliceEnhancements
         internal static int CommonEventFrequency = 70;
         internal static int UncommonEventFrequency = 20;
         internal static int RareEventFrequency = 10;
-        internal static string AssaultFrequency = "common";
-        internal static string CarJackingFrequency = "uncommon";
-        internal static string DrugDealFrequency = "common";
-        internal static string DriveByFrequency = "rare";
+        internal static string AssaultFrequency = "off";
+        internal static string CarJackingFrequency = "off";
+        internal static string DrugDealFrequency = "off";
+        internal static string DriveByFrequency = "off";
 
         // BOLO Settings
         internal static int BOLOTimer = 10;
@@ -57,20 +56,22 @@ namespace RichsPoliceEnhancements
             EnablePRT = ini.ReadBoolean("Features", "EnablePriorityRadioTraffic", false);
             EnablePursuitUpdates = ini.ReadBoolean("Features", "EnablePursuitUpdates", false);
             EnableAmbientEvents = ini.ReadBoolean("Features", "EnableAmbientEvents", false);
+            EnableSuspectStamina = ini.ReadBoolean("Features", "EnableSuspectStamina", false);
 
             // Ambient Event Settings
             EventCooldownTimer = ini.ReadInt32("Ambient Events", "EventCooldownTimer", 5);
+            EventCooldownTimer *= 60000;
             EventBlips = ini.ReadBoolean("Ambient Events", "EventBlips", true);
             CommonEventFrequency = ini.ReadInt32("Ambient Events", "CommonEventFrequency", 70);
             UncommonEventFrequency = ini.ReadInt32("Ambient Events", "UnommonEventFrequency", 20);
             RareEventFrequency = ini.ReadInt32("Ambient Events", "RareEventFrequency", 10);
-            AssaultFrequency = ini.ReadString("Ambient Events", "AssaultFrequency", "common");
+            AssaultFrequency = ini.ReadString("Ambient Events", "AssaultFrequency", "off");
             eventFrequencies.Add("Assault", AssaultFrequency);
-            CarJackingFrequency = ini.ReadString("Ambient Events", "CarJackingFrequency", "uncommon");
+            CarJackingFrequency = ini.ReadString("Ambient Events", "CarJackingFrequency", "off");
             eventFrequencies.Add("CarJacking", CarJackingFrequency);
-            DrugDealFrequency = ini.ReadString("Ambient Events", "DrugDealFrequency", "common");
+            DrugDealFrequency = ini.ReadString("Ambient Events", "DrugDealFrequency", "off");
             eventFrequencies.Add("DrugDeal", DrugDealFrequency);
-            DriveByFrequency = ini.ReadString("Ambient Events", "DriveByFrequency", "rare");
+            DriveByFrequency = ini.ReadString("Ambient Events", "DriveByFrequency", "off");
             eventFrequencies.Add("DriveBy", DriveByFrequency);
 
             // BOLO Settings
