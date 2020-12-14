@@ -20,18 +20,17 @@ namespace RichsPoliceEnhancements
 
         internal Blip Blip { get; private set; }
 
-        internal EventPed(AmbientEvent @event, Ped ped, Role role)
+        internal EventPed(AmbientEvent @event, Ped ped, Role role, bool giveBlip, BlipSprite sprite = BlipSprite.StrangersandFreaks)
         {
             Event = @event;
             Ped = ped;
             SetPersistence();
             Role = role;
-            if (Settings.EventBlips && Role == Role.PrimarySuspect)
+            if (Settings.EventBlips && giveBlip)
             {
-                CreateBlip();
+                CreateBlip(sprite);
             }
             Event.EventPeds.Add(this);
-            //Game.LogTrivial($"Ped location: {Ped.Position}");
         }
 
         private void SetPersistence()
@@ -40,13 +39,21 @@ namespace RichsPoliceEnhancements
             Ped.BlockPermanentEvents = true;
         }
 
-        private void CreateBlip()
+        private void CreateBlip(BlipSprite sprite)
         {
             Blip = Ped.AttachBlip();
-            Blip.Sprite = BlipSprite.StrangersandFreaks;
+            Blip.Sprite = sprite;
             if(Role == Role.PrimarySuspect)
             {
                 Blip.Color = Color.Red;
+                if(Event.EventType == EventType.DriveBy)
+                {
+                    Blip.Alpha = 0;
+                }
+            }
+            if(Role == Role.Victim)
+            {
+                Blip.Color = Color.White;
             }
             Blip.Scale = 0.75f;
             Event.EventBlips.Add(Blip);
