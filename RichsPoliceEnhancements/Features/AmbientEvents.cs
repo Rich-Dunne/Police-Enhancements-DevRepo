@@ -4,9 +4,9 @@ using Rage;
 using LSPD_First_Response.Mod.API;
 using System.Linq;
 
-namespace RichsPoliceEnhancements
+namespace RichsPoliceEnhancements.Features
 {
-    class AmbientEvents
+    internal class AmbientEvents
     {
         private static bool _eventActive = false;
         internal static AmbientEvent ambientEvent;
@@ -34,7 +34,7 @@ namespace RichsPoliceEnhancements
             Game.LogTrivial($"[RPE Ambient Event]: Pre-event loop initialized.");
             while (true)
             {
-                GameFiber.Sleep(20000); //20000 for testing or Settings.EventCooldownTimer for release
+                GameFiber.Sleep(Settings.EventCooldownTimer); //20000 for testing or Settings.EventCooldownTimer for release
                 if(PlayerIsBusy())
                 {
                     Game.LogTrivial($"[RPE Ambient Event]: The player is busy, try again later.");
@@ -75,7 +75,7 @@ namespace RichsPoliceEnhancements
 
             void SelectEvent()
             {
-                var randomValue = 40; // GetRandomNumber(100);
+                var randomValue = GetRandomNumber(100); // GetRandomNumber(100); or 40 for testing
                 Game.LogTrivial($"[RPE Ambient Event]: Choosing random event ({randomValue}).");
                 if (randomValue <= Settings.CommonEventFrequency && commonEvents.Count > 0)
                 {
@@ -86,6 +86,8 @@ namespace RichsPoliceEnhancements
                         return;
                     }
                     Game.LogTrivial($"[RPE Ambient Event]: Starting {commonEvent} event.");
+                    Game.LogTrivial($"[RPE Ambient Event]: Setting _eventActive to true");
+                    _eventActive = true;
                     EventType eventType = (EventType)Enum.Parse(typeof(EventType), commonEvent);
                     ambientEvent = new AmbientEvent(eventType);
                 }
@@ -98,6 +100,8 @@ namespace RichsPoliceEnhancements
                         return;
                     }
                     Game.LogTrivial($"[RPE Ambient Event]: Starting {uncommonEvent} event.");
+                    Game.LogTrivial($"[RPE Ambient Event]: Setting _eventActive to true");
+                    _eventActive = true;
                     EventType eventType = (EventType)Enum.Parse(typeof(EventType), uncommonEvent);
                     new AmbientEvent(eventType);
                 }
@@ -110,11 +114,11 @@ namespace RichsPoliceEnhancements
                         return;
                     }
                     Game.LogTrivial($"[RPE Ambient Event]: Starting {rareEvent} event.");
+                    Game.LogTrivial($"[RPE Ambient Event]: Setting _eventActive to true");
+                    _eventActive = true;
                     EventType eventType = (EventType)Enum.Parse(typeof(EventType), rareEvent);
                     new AmbientEvent(eventType);
                 }
-                Game.LogTrivial($"[RPE Ambient Event]: Setting _eventActive to true");
-                _eventActive = true;
             }
 
             int GetRandomNumber(int maxValue) => new Random().Next(1, maxValue);
@@ -123,7 +127,7 @@ namespace RichsPoliceEnhancements
         internal static void SetEventActiveFalse()
         {
             _eventActive = false;
-            Game.LogTrivial($"[RPE Ambient Event]: _eventActive is {_eventActive}");
+            //Game.LogTrivial($"[RPE Ambient Event]: _eventActive is {_eventActive}");
         }
     }
 }

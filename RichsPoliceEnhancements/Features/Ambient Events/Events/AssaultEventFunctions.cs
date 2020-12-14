@@ -4,114 +4,166 @@ using System.Drawing;
 using System.Linq;
 using Rage;
 using LSPD_First_Response.Mod.API;
-
+using RichsPoliceEnhancements.Features;
 
 namespace RichsPoliceEnhancements
 {
     class AssaultEventFunctions
     {
-        public static void RunEventFunctions(Ped player, List<Ped> nearbyPeds, List<EventPed> eventPeds, List<EventVehicle> eventVehicles, List<Blip> eventBlips)
+        internal static void BeginEvent(AmbientEvent @event)
         {
-            Game.LogTrivial($"[Rich Ambiance] Starting Assault event.");
-            if (FindSuspect(nearbyPeds, eventPeds, eventBlips) != null && FindVictim(nearbyPeds, eventPeds) != null)
+            var attempts = 1;
+            var suspects = new List<Ped>();
+            var victims = new List<Ped>();
+            Game.LogTrivial($"[RPE Ambient Event]: Starting Assault event.");
+
+            LoopToFindEventPeds();
+
+            if (@event.EventPeds.Count < 2)
             {
-                AssaultInteraction(eventPeds, eventBlips);
+                Game.LogTrivial($"[RPE Ambient Event]: Unable to find suitable event peds after 100 attempts.  Ending event.");
+                return;
             }
-            else
+
+            GameFiber AssaultInteractionFiber = new GameFiber(() => EventProcess(@event), "RPE Assault Interaction Fiber");
+            AssaultInteractionFiber.Start();
+
+            void LoopToFindEventPeds()
             {
-                Game.LogTrivial($"[Rich Ambiance] Suspect or victim returned null.  Ending event.");
-            }
-        }
-
-        private static Ped FindSuspect(List<Ped> pedList, List<EventPed> eventPeds, List<Blip> eventBlips)
-        {
-            foreach (Ped p in pedList.Where(p => p.IsOnFoot))
-            {
-                // Ped Settings
-                Ped suspect = p;
-                suspect.IsPersistent = true;
-                suspect.BlockPermanentEvents = true;
-
-                // Blip Settings
-                /*Blip suspectBlip = suspect.AttachBlip();
-                suspectBlip.Sprite = BlipSprite.StrangersandFreaks;
-                suspectBlip.Color = Color.Red;
-                suspectBlip.Scale = 0.75f;
-                eventBlips.Add(suspectBlip);*/
-
-                //eventPeds.Add(new EventPed("Assault", suspect));
-                Game.LogTrivial($"[Rich Ambiance] Suspect found.");
-                return suspect;
-            }
-            Game.LogTrivial($"[Rich Ambiance] No suitable suspect peds found.");
-            return null;
-        }
-
-        private static Ped FindVictim(List<Ped> pedList, List<EventPed> eventPeds)
-        {
-            var suspect = eventPeds[0];
-            Ped victim;
-            List<Ped> sortedList = pedList.OrderBy(p => p.DistanceTo(suspect.Ped)).ToList();
-
-            foreach (Ped p in sortedList)
-            {
-                if (p.IsOnFoot && p.DistanceTo(suspect.Ped) > 0 && p.DistanceTo(suspect.Ped) <= 15f)
+                while (@event.EventPeds.Count < 2 && attempts <= 100 && !Functions.IsCalloutRunning() && Functions.GetActivePursuit() == null)
                 {
-                    victim = p;
-                    victim.IsPersistent = true;
-                    victim.BlockPermanentEvents = true;
-                    //eventPeds.Add(new EventPed("Assault", victim));
-                    Game.LogTrivial($"[Rich Ambiance] Victim found.");
-                    return victim;
+                    suspects = FindSuspects();
+                    victims = FindVictims();
+                    FindEventPedPair();
+                    if (@event.EventPeds.Count == 2)
+                    {
+                        Game.LogTrivial($"Success on attempt {attempts}");
+                        break;
+                    }
+                    @event.EventPeds.Clear();
+                    suspects.Clear();
+                    victims.Clear();
+                    attempts++;
+                    GameFiber.Sleep(500);
                 }
             }
-            suspect.Ped.IsPersistent = false;
-            suspect.Ped.Tasks.Clear();
-            suspect.Ped.Dismiss();
 
-            Game.LogTrivial($"[Rich Ambiance] No victims found close enough to suspect.");
-            return null;
-        }
+            List<Ped> NearbyPeds() => World.GetAllPeds().Where(p => PedIsRelevant(p)).ToList();
 
-        private static void AssaultInteraction(List<EventPed> eventPeds, List<Blip> eventBlips)
-        {
-            Ped suspect = eventPeds[0].Ped;
-            Ped victim = eventPeds[1].Ped;
-
-            suspect.Tasks.FightAgainst(victim);
-
-            Game.LogTrivial($"[Rich Ambiance] Waiting for suspect to attack victim.");
-            //while (!victim.HasBeenDamagedBy(suspect) && !AmbientEvent.PrematureEndCheck(eventPeds))
-            //{
-            //    GameFiber.Yield();
-            //}
-
-            if (Settings.EventBlips)
+            bool PedIsRelevant(Ped ped)
             {
-                Game.LogTrivial($"[Rich Ambiance] Creating event blip.");
-                Blip suspectBlip = suspect.AttachBlip();
-                suspectBlip.Sprite = BlipSprite.StrangersandFreaks;
-                suspectBlip.Color = Color.Red;
-                suspectBlip.Scale = 0.75f;
-                eventBlips.Add(suspectBlip);
+                if (ped && ped.IsAlive && ped.Position.DistanceTo(Game.LocalPlayer.Character.Position) < 100f && !ped.IsPlayer && !ped.IsInjured && !ped.Model.Name.Contains("A_C") && ped.RelationshipGroup != RelationshipGroup.Cop)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
             }
 
-            if (new Random().Next(1) == 1)
+            List<Ped> FindSuspects()
             {
-                Game.LogTrivial($"[Rich Ambiance] Victim is fighting suspect.");
-                victim.Tasks.FightAgainst(suspect);
+                return NearbyPeds().Where(p => p.IsOnFoot).ToList();
+            }
+
+            List<Ped> FindVictims()
+            {
+                return NearbyPeds().Where(p => p.IsOnFoot).ToList();
+            }
+
+            void FindEventPedPair()
+            {
+                // If suspect is within 10f of any ped from victims, assign driver and that victim ped as event peds
+                var suspect = suspects.FirstOrDefault(x => victims.Any(y => y.DistanceTo2D(x) <= 10f));
+                if (!suspect)
+                {
+                    Game.LogTrivial($"[RPE Ambient Event]: No suspects found with a suitable victim nearby.");
+                    @event.Cleanup();
+                    return;
+                }
+                var victim = victims.FirstOrDefault(x => x != suspect && x.DistanceTo2D(suspect) <= 10f);
+                if (!victim)
+                {
+                    Game.LogTrivial($"[RPE Ambient Event]: No victim found within range of the suspect.");
+                    @event.Cleanup();
+                    return;
+                }
+
+                new EventPed(@event, suspect, Role.PrimarySuspect, true);
+                new EventPed(@event, victim, Role.Victim, false);
+            }
+        }
+
+        private static void EventProcess(AmbientEvent @event)
+        {
+            var suspect = @event.EventPeds.FirstOrDefault(x => x.Role == Role.PrimarySuspect);
+            var victim = @event.EventPeds.FirstOrDefault(x => x.Role == Role.Victim);
+            Game.LogTrivial($"[RPE Ambient Event]: Running Assault interaction.");
+
+            suspect.Ped.Tasks.FightAgainst(victim.Ped);
+            if (new Random().Next(1) == 1 || victim.Ped.Inventory.Weapons.Count > 0)
+            {
+                Game.LogTrivial($"[RPE Ambient Event]: Victim is fighting suspect.");
+                victim.Ped.Tasks.FightAgainst(suspect.Ped);
             }
             else
             {
-                Game.LogTrivial($"[Rich Ambiance] Victim is fleeing.");
-                victim.Tasks.ReactAndFlee(suspect);
+                Game.LogTrivial($"[RPE Ambient Event]: Victim is fleeing.");
+                victim.Ped.Tasks.ReactAndFlee(suspect.Ped);
             }
 
-            Game.LogTrivial($"[Rich Ambiance] PrematureEndCheck looping.");
-            //while (!AmbientEvent.PrematureEndCheck(eventPeds))
-            //{
-            //    GameFiber.Sleep(1000);
-            //}
+            EndEvent(@event);
+        }
+
+        private static void EndEvent(AmbientEvent @event)
+        {
+            var suspect = @event.EventPeds.FirstOrDefault(x => x.Role == Role.PrimarySuspect);
+            var victim = @event.EventPeds.FirstOrDefault(x => x.Role == Role.Victim);
+            var oldDistance = Game.LocalPlayer.Character.DistanceTo2D(suspect.Ped);
+
+            while (true)
+            {
+                if (!suspect.Ped || !victim.Ped || !suspect.Ped.IsAlive || !victim.Ped.IsAlive || Functions.IsPedGettingArrested(suspect.Ped))
+                {
+                    Game.LogTrivial($"[RPE Ambient Event]: Suspect or victim is null or dead, or driver is arrested.  Ending event.");
+                    @event.Cleanup();
+                    return;
+                }
+
+                if (Game.LocalPlayer.Character.DistanceTo2D(suspect.Ped) > 150f)
+                {
+                    Game.LogTrivial($"[RPE Ambient Event]: Player is too far away.  Ending event.");
+                    @event.Cleanup();
+                    return;
+                }
+
+                if(suspect.Ped.DistanceTo2D(victim.Ped) > 50f)
+                {
+                    Game.LogTrivial($"[RPE Ambient Event]: Victim got away from suspect.  Ending event.");
+                    @event.Cleanup();
+                    return;
+                }
+
+                if (Functions.GetActivePursuit() != null && Functions.IsPedInPursuit(suspect.Ped))
+                {
+                    Game.LogTrivial($"[RPE Ambient Event]: Player is in pursuit of suspect.  Ending event.");
+                    @event.Cleanup();
+                    return;
+                }
+
+                if (Math.Abs(Game.LocalPlayer.Character.DistanceTo2D(suspect.Ped) - oldDistance) > 0.15 && Game.LocalPlayer.Character.DistanceTo2D(suspect.Ped) > oldDistance && suspect.Blip.Alpha > 0f)
+                {
+                    suspect.Blip.Alpha -= 0.001f;
+                }
+                else if (Math.Abs(Game.LocalPlayer.Character.DistanceTo2D(suspect.Ped) - oldDistance) > 0.15 && Game.LocalPlayer.Character.DistanceTo2D(suspect.Ped) < oldDistance && suspect.Blip.Alpha < 1.0f)
+                {
+                    suspect.Blip.Alpha += 0.01f;
+                }
+                oldDistance = Game.LocalPlayer.Character.DistanceTo2D(suspect.Ped);
+
+                GameFiber.Yield();
+            }
         }
     }
 }

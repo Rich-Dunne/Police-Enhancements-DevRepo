@@ -2,6 +2,7 @@
 using Rage;
 using System.Linq;
 using System;
+using RichsPoliceEnhancements.Features;
 
 namespace RichsPoliceEnhancements
 {
@@ -21,7 +22,10 @@ namespace RichsPoliceEnhancements
         CriminalMischief = 11,
         OfficerAmbush = 12,
         CitizenAssist = 13,
-        MentalHealth = 14
+        MentalHealth = 14,
+        TrafficStopAssist = 15,
+        OpenCarry = 16,
+        CarVsAnimal = 17
     }
 
     internal class AmbientEvent
@@ -44,6 +48,15 @@ namespace RichsPoliceEnhancements
             {
                 case EventType.DrugDeal:
                     DrugDealEventFunctions.BeginEvent(this);
+                    break;
+                case EventType.DriveBy:
+                    DriveByEventFunctions.BeginEvent(this);
+                    break;
+                case EventType.CarJacking:
+                    CarJackingEventFunctions.BeginEvent(this);
+                    break;
+                case EventType.Assault:
+                    AssaultEventFunctions.BeginEvent(this);
                     break;
             }
         }
