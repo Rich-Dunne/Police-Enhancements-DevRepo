@@ -24,14 +24,6 @@ namespace RichsPoliceEnhancements.Features
             Events.OnCalloutAccepted += Events_OnCalloutAccepted;
             while (true)
             {
-                //CheckForActivePursuit();
-                //if (pursuit != null && !backupOffered)
-                //{
-
-                //    PromptForAmbientBackup(Incident.Pursuit);
-                //    continue;
-                //}
-
                 CheckForActiveTrafficStop();
                 if(trafficStop != null && !_backupOffered)
                 {
@@ -40,19 +32,6 @@ namespace RichsPoliceEnhancements.Features
 
                 GameFiber.Sleep(100);
             }
-
-            //void CheckForActivePursuit()
-            //{
-            //    if (Functions.GetActivePursuit() != null && pursuit == null)
-            //    {
-            //        pursuit = Functions.GetActivePursuit();
-            //    }
-            //    else if (pursuit != null && Functions.GetActivePursuit() == null)
-            //    {
-            //        pursuit = null;
-            //        backupOffered = false;
-            //    }
-            //}
 
             void CheckForActiveTrafficStop()
             {
