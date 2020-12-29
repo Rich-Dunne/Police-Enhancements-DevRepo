@@ -112,8 +112,8 @@ namespace RichsPoliceEnhancements
                 if (Settings.EnableSuspectStamina)
                 {
                     Game.LogTrivial("[RPE]: SuspectStamina is enabled.");
-                    GameFiber SuspectStamina = new GameFiber(() => SuspectStamina.Main(), "RPE Suspect Stamina Fiber");
-                    SuspectStamina.Start();
+                    GameFiber SuspectStaminaFiber = new GameFiber(() => SuspectStamina.Main(), "RPE Suspect Stamina Fiber");
+                    SuspectStaminaFiber.Start();
                 }
                 else
                 {
