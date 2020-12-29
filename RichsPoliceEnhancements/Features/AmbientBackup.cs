@@ -18,19 +18,40 @@ namespace RichsPoliceEnhancements.Features
         private static bool _backupOffered = false;
         internal static void Main()
         {
-            //LHandle pursuit = null;
+            LHandle pursuit = null;
             LHandle trafficStop = null;
 
             Events.OnCalloutAccepted += Events_OnCalloutAccepted;
             while (true)
             {
+                CheckForActivePursuit();
+                if (pursuit != null && !_backupOffered)
+                {
+
+                    PromptForAmbientBackup(Incident.Pursuit);
+                    continue;
+                }
+
                 CheckForActiveTrafficStop();
-                if(trafficStop != null && !_backupOffered)
+                if (trafficStop != null && !_backupOffered)
                 {
                     PromptForAmbientBackup(Incident.TrafficStop);
                 }
 
                 GameFiber.Sleep(100);
+            }
+
+            void CheckForActivePursuit()
+            {
+                if (Functions.GetActivePursuit() != null && pursuit == null)
+                {
+                    pursuit = Functions.GetActivePursuit();
+                }
+                else if (pursuit != null && Functions.GetActivePursuit() == null)
+                {
+                    pursuit = null;
+                    _backupOffered = false;
+                }
             }
 
             void CheckForActiveTrafficStop()
