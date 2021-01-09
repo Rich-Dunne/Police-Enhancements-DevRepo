@@ -148,7 +148,7 @@ namespace RichsPoliceEnhancements.Features
 
             Vehicle GetNearbyPoliceVehicleWithDriver()
             {
-                foreach (Vehicle vehicle in Game.LocalPlayer.Character.GetNearbyVehicles(16).Where(v => v && v.IsPoliceVehicle && v != Game.LocalPlayer.Character.LastVehicle && v.HasDriver && v.Driver.IsAlive && !Functions.IsPedInPursuit(v.Driver)))
+                foreach (Vehicle vehicle in Game.LocalPlayer.Character.GetNearbyVehicles(16).Where(v => v && v.IsPoliceVehicle && v != Game.LocalPlayer.Character.LastVehicle && v.HasDriver && v.Driver && v.Driver.IsAlive && !Functions.IsPedInPursuit(v.Driver)))
                 {
                     return vehicle;
                 }
