@@ -15,17 +15,18 @@ namespace RichsPoliceEnhancements.Features
 
     internal static class AmbientBackup
     {
-        private static bool _backupOffered = false;
+        private static bool BackupOffered { get; set; } = false;
+
         internal static void Main()
         {
             LHandle pursuit = null;
             LHandle trafficStop = null;
-
             Events.OnCalloutAccepted += Events_OnCalloutAccepted;
+
             while (true)
             {
                 CheckForActivePursuit();
-                if (pursuit != null && !_backupOffered)
+                if (pursuit != null && !BackupOffered)
                 {
 
                     PromptForAmbientBackup(Incident.Pursuit);
@@ -33,7 +34,7 @@ namespace RichsPoliceEnhancements.Features
                 }
 
                 CheckForActiveTrafficStop();
-                if (trafficStop != null && !_backupOffered)
+                if (trafficStop != null && !BackupOffered)
                 {
                     PromptForAmbientBackup(Incident.TrafficStop);
                 }
@@ -50,7 +51,7 @@ namespace RichsPoliceEnhancements.Features
                 else if (pursuit != null && Functions.GetActivePursuit() == null)
                 {
                     pursuit = null;
-                    _backupOffered = false;
+                    BackupOffered = false;
                 }
             }
 
@@ -64,7 +65,7 @@ namespace RichsPoliceEnhancements.Features
                 else if (trafficStop != null && Functions.GetCurrentPullover() == null)
                 {
                     trafficStop = null;
-                    _backupOffered = false;
+                    BackupOffered = false;
                 }
             }
         }
@@ -74,7 +75,7 @@ namespace RichsPoliceEnhancements.Features
             Game.LogTrivial($"[RPE Ambient Backup]: Callout accepted");
             LHandle pursuit = null;
             CheckForActivePursuit();
-            if (pursuit != null && !_backupOffered)
+            if (pursuit != null && !BackupOffered)
             {
                 PromptForAmbientBackup(Incident.Pursuit);
             }
@@ -88,17 +89,18 @@ namespace RichsPoliceEnhancements.Features
                 else if (pursuit != null && Functions.GetActivePursuit() == null)
                 {
                     pursuit = null;
-                    _backupOffered = false;
+                    BackupOffered = false;
                 }
             }
         }
 
         private static void PromptForAmbientBackup(Incident incident)
         {
+            GameFiber.Sleep(100);
             var startTime = Game.GameTime;
             Game.LogTrivial($"[RPE Ambient Backup]: Displaying backup prompt at {startTime}.");
             var notification = Game.DisplayNotification($"~o~Rich's Police Enhancements~w~\nIf a nearby unit is available during this incident, would you like them to assist you?  Press [~g~Y~w~] to accept or [~r~N~w~] to decline.");
-            _backupOffered = true;
+            BackupOffered = true;
 
             // Accept input for 8 seconds (default time Help message is displayed)
             while (true)
@@ -106,10 +108,10 @@ namespace RichsPoliceEnhancements.Features
                 var currentTime = Game.GameTime;
                 if (Math.Abs(currentTime - startTime) >= 8000 || Game.IsKeyDown(Keys.N))
                 {
-                    Game.LogTrivial($"[RPE Ambient Backup]: Current time: {currentTime}");
+                    //Game.LogTrivial($"[RPE Ambient Backup]: Current time: {currentTime}");
                     Game.LogTrivial($"[RPE Ambient Backup]: Player denied backup (intentionally or timed out).");
                     Game.RemoveNotification(notification);
-                    notification = Game.DisplayNotification($"~o~Rich's Police Enhancements~w~\nAmbient backup ~r~declined~w~.");
+                    Game.DisplayNotification($"~o~Rich's Police Enhancements~w~\nAmbient backup ~r~declined~w~.");
 
                     return;
                 }
@@ -117,7 +119,7 @@ namespace RichsPoliceEnhancements.Features
                 {
                     Game.LogTrivial($"[RPE Ambient Backup]: Player accepted backup.");
                     Game.RemoveNotification(notification);
-                    notification = Game.DisplayNotification($"~o~Rich's Police Enhancements~w~\nAmbient backup ~g~accepted~w~.  When a nearby unit is available, they will assist you.");
+                    Game.DisplayNotification($"~o~Rich's Police Enhancements~w~\nAmbient backup ~g~accepted~w~.  When a nearby unit is available, they will assist you.");
                     CheckForAmbientUnits(incident);
                     break;
                 }
@@ -134,7 +136,7 @@ namespace RichsPoliceEnhancements.Features
                 {
                     if(incident == Incident.TrafficStop)
                     {
-                        GiveAmbientUnitBackupTasks(ambientPoliceUnit);
+                        GameFiber.StartNew(() => GiveAmbientUnitBackupTasks(ambientPoliceUnit), "Ambient Backup Task Fiber");
                         break;
                     }
                     if(incident == Incident.Pursuit)
@@ -158,33 +160,30 @@ namespace RichsPoliceEnhancements.Features
 
         private static void GiveAmbientUnitBackupTasks(Vehicle ambientPoliceUnit)
         {
-            GameFiber.StartNew(() =>
+            ambientPoliceUnit.IsPersistent = true;
+            ambientPoliceUnit.Driver.IsPersistent = true;
+            ambientPoliceUnit.Driver.BlockPermanentEvents = true;
+            var approachPosition = Game.LocalPlayer.Character.LastVehicle.GetOffsetPosition(new Vector3(0, -15f, 0));
+            var backupPosition = Game.LocalPlayer.Character.LastVehicle.GetOffsetPosition(new Vector3(0, -8f, 0));
+            var acceptedDistance = GetAcceptedStoppingDistance();
+
+            ambientPoliceUnit.Driver.Tasks.DriveToPosition(approachPosition, 20f, (VehicleDrivingFlags)786868, acceptedDistance);
+            while (VehicleAndDriverAreValid() && ambientPoliceUnit.DistanceTo2D(approachPosition) > acceptedDistance)
             {
-                ambientPoliceUnit.IsPersistent = true;
-                ambientPoliceUnit.Driver.IsPersistent = true;
-                ambientPoliceUnit.Driver.BlockPermanentEvents = true;
-                var approachPosition = Game.LocalPlayer.Character.LastVehicle.GetOffsetPosition(new Vector3(0, -15f, 0));
-                var backupPosition = Game.LocalPlayer.Character.LastVehicle.GetOffsetPosition(new Vector3(0, -8f, 0));
-                var acceptedDistance = GetAcceptedStoppingDistance();
+                CheckUnitTaskStatus();
+                GameFiber.Yield();
+            }
 
-                ambientPoliceUnit.Driver.Tasks.DriveToPosition(approachPosition, 20f, (VehicleDrivingFlags)786868, acceptedDistance);
-                while (VehicleAndDriverAreValid() && ambientPoliceUnit.DistanceTo2D(approachPosition) > acceptedDistance)
-                {
-                    CheckUnitTaskStatus(approachPosition, acceptedDistance);
-                    GameFiber.Yield();
-                }
+            if (!VehicleAndDriverAreValid())
+            {
+                return;
+            }
 
-                if (!VehicleAndDriverAreValid())
-                {
-                    return;
-                }
+            Game.LogTrivial($"[RPE Ambient Backup]: Ambient backup unit is on final approach.");
+            ambientPoliceUnit.Driver.Tasks.DriveToPosition(backupPosition, 5f, (VehicleDrivingFlags)786868, acceptedDistance).WaitForCompletion();
 
-                Game.LogTrivial($"[RPE Ambient Backup]: Ambient backup unit is on final approach.");
-                ambientPoliceUnit.Driver.Tasks.DriveToPosition(backupPosition, 5f, (VehicleDrivingFlags)786868, acceptedDistance).WaitForCompletion();
-
-                Game.LogTrivial($"[RPE Ambient Backup]: Ambient backup unit is exiting their vehicle.");
-                ambientPoliceUnit.Driver.Tasks.LeaveVehicle(LeaveVehicleFlags.None);
-            }, "Ambient Backup Task Fiber");
+            Game.LogTrivial($"[RPE Ambient Backup]: Ambient backup unit is exiting their vehicle.");
+            ambientPoliceUnit.Driver.Tasks.LeaveVehicle(LeaveVehicleFlags.None);
 
             float GetAcceptedStoppingDistance()
             {
@@ -192,14 +191,14 @@ namespace RichsPoliceEnhancements.Features
                 return MathHelper.Clamp(dist, 2, 10);
             }
 
-            void CheckUnitTaskStatus(Vector3 backupPosition, float acceptedDistance)
+            void CheckUnitTaskStatus()
             {
                 if (ambientPoliceUnit.Driver.Tasks.CurrentTaskStatus == TaskStatus.NoTask)
                 {
                     Game.LogTrivial($"[RPE Ambient Backup]: {ambientPoliceUnit.Model.Name} [{ambientPoliceUnit.Handle}] driver [{ambientPoliceUnit.Driver.Handle}] has no task.  Reassiging task.");
                     if (ambientPoliceUnit.Driver.CurrentVehicle)
                     {
-                        ambientPoliceUnit.Driver.Tasks.DriveToPosition(backupPosition, 15f, (VehicleDrivingFlags)263088, acceptedDistance);
+                        ambientPoliceUnit.Driver.Tasks.DriveToPosition(approachPosition, 15f, (VehicleDrivingFlags)263088, acceptedDistance);
                     }
                     else
                     {
