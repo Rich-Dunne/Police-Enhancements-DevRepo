@@ -83,6 +83,7 @@
     <Compile Include="Settings.cs" />
     <Compile Include="Features\SilentBackup.cs" />
     <Compile Include="Features\TVI.cs" />
+    <Compile Include="Utils\DependencyChecker.cs" />
     <Compile Include="Utils\VocalDispatch\Utilities.cs" />
     <Compile Include="Utils\VocalDispatch\VocalDispatchHelper.cs" />
     <Compile Include="Utils\Extensions.cs" />
