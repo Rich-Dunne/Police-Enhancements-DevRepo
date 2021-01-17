@@ -9,10 +9,10 @@ namespace RichsPoliceEnhancements
     internal enum EventType
     {
         None = 0,
-        DrugDeal = 1,
-        DriveBy = 2,
-        CarJacking = 3,
-        Assault = 4,
+        DrugDeal = 1, // Implemented
+        DriveBy = 2, // Implemented
+        CarJacking = 3, // Implemented
+        Assault = 4, // Implemented
         RoadRage = 5,
         PublicIntoxication = 6,
         DUI = 7,
