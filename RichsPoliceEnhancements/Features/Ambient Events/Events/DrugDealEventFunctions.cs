@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Drawing;
 using Rage;
 using LSPD_First_Response.Mod.API;
 using System.Linq;
