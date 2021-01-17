@@ -11,7 +11,7 @@ namespace RichsPoliceEnhancements.Features
         internal static void Main()
         {
             LHandle pursuit = null;
-            List<Vehicle> pursuitVehicles = new List<Vehicle>();
+            var pursuitVehicles = new List<Vehicle>();
             bool pursuitCopsCollectorStarted = false;
 
             while (true)
@@ -21,7 +21,7 @@ namespace RichsPoliceEnhancements.Features
                     pursuit = Functions.GetActivePursuit();
 
                     Game.LogTrivial("[RPE AI Siren Cycle]: Beginning pursuit cop collector");
-                    GameFiber PursuitCopsCollectorFiber = new GameFiber(() => PursuitCopsCollector(pursuit, pursuitVehicles));
+                    GameFiber PursuitCopsCollectorFiber = new GameFiber(() => PursuitCopsCollector(pursuit, pursuitVehicles), "Pursuit Cops Collector Fiber");
                     PursuitCopsCollectorFiber.Start();
                     pursuitCopsCollectorStarted = true;
                 }
@@ -38,7 +38,7 @@ namespace RichsPoliceEnhancements.Features
             }
         }
 
-        internal static void PursuitCopsCollector(LHandle pursuit, List<Vehicle> pursuitVehicles)
+        private static void PursuitCopsCollector(LHandle pursuit, List<Vehicle> pursuitVehicles)
         {
             while (Functions.GetActivePursuit() != null)
             {
@@ -48,14 +48,14 @@ namespace RichsPoliceEnhancements.Features
                     pursuitVehicles.Add(veh);
 
                     Game.LogTrivial("[RPE AI Siren Cycle]: Starting vehicle's personal siren cycle fiber");
-                    GameFiber AISirenCyclerFiber = new GameFiber(() => AISirenCycler(pursuit, veh));
+                    GameFiber AISirenCyclerFiber = new GameFiber(() => AISirenCycler(pursuit, veh), "Siren Cycler Fiber");
                     AISirenCyclerFiber.Start();
                 }
                 GameFiber.Yield();
             }
         }
 
-        internal static void AISirenCycler(LHandle pursuit, Vehicle policeVeh)
+        private static void AISirenCycler(LHandle pursuit, Vehicle policeVeh)
         {
             Game.LogTrivial($"[RPE AI Siren Cycle]: In the siren cycler");
             Game.LogTrivial($"[RPE AI Siren Cycle]: IsPursuitStillRunning: {Functions.IsPursuitStillRunning(pursuit)}");
