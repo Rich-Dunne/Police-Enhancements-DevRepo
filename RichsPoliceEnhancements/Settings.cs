@@ -6,39 +6,40 @@ namespace RichsPoliceEnhancements
     internal static class Settings
     {
         // Feature Settings
-        internal static bool EnableAmbientBackup = false;
-        internal static bool EnableAISirenCycle = false;
-        internal static bool EnableSilentBackup = false;
-        internal static bool EnableTVI = false;
-        internal static bool EnableBOLO = false;
-        internal static bool EnablePRT = false;
-        internal static bool EnablePursuitUpdates = false;
-        internal static bool EnableAmbientEvents = false;
-        internal static bool EnableSuspectStamina = false;
+        internal static bool EnableAmbientBackup { get; private set; } = false;
+        internal static bool EnableAISirenCycle { get; private set; } = false;
+        internal static bool EnableSilentBackup { get; private set; } = false;
+        internal static bool EnableTVI { get; private set; } = false;
+        internal static bool EnableBOLO { get; private set; } = false;
+        internal static bool EnablePRT { get; private set; } = false;
+        internal static bool EnablePursuitUpdates { get; private set; } = false;
+        internal static bool EnableAmbientEvents { get; private set; } = false;
+        internal static bool EnableSuspectStamina { get; private set; } = false;
 
         // Ambient Event settings
-        internal static Dictionary<string, string> eventFrequencies = new Dictionary<string, string>();
-        internal static int EventCooldownTimer = 5;
-        internal static bool EventBlips = false;
-        internal static int CommonEventFrequency = 70;
-        internal static int UncommonEventFrequency = 20;
-        internal static int RareEventFrequency = 10;
-        internal static string AssaultFrequency = "off";
-        internal static string CarJackingFrequency = "off";
-        internal static string DrugDealFrequency = "off";
-        internal static string DriveByFrequency = "off";
+        internal static Dictionary<string, string> EventFrequencies { get; } = new Dictionary<string, string>();
+        internal static int EventCooldownTimer { get; private set; } = 5;
+        internal static bool EventBlips { get; private set; } = false;
+        internal static int CommonEventFrequency { get; private set; } = 70;
+        internal static int UncommonEventFrequency { get; private set; } = 20;
+        internal static int RareEventFrequency { get; private set; } = 10;
+        internal static string AssaultFrequency { get; private set; } = "off";
+        internal static string CarJackingFrequency { get; private set; } = "off";
+        internal static string DrugDealFrequency { get; private set; } = "off";
+        internal static string DriveByFrequency { get; private set; } = "off";
 
         // BOLO Settings
-        internal static int BOLOTimer = 10;
-        internal static int BOLOFrequency = 5;
+        internal static int BOLOTimer { get; private set; } = 10;
+        internal static int BOLOFrequency { get; private set; } = 5;
 
         // PRT Settings
-        internal static int PRTToneTimer = 15;
-        internal static bool AutomaticPRT = false;
+        internal static int PRTToneTimer { get; private set; } = 15;
+        internal static bool AutomaticPRT { get; private set; } = false;
 
         // Pursuit Update Settings
-        internal static int PursuitUpdateTimer = 20;
-        internal static bool DispatchUpdates = false;
+        internal static int PursuitUpdateTimer { get; private set; } = 20;
+        internal static bool DispatchUpdates { get; private set; } = false;
+        internal static bool DisableNotifications { get; private set; } = false;
 
         internal static readonly InitializationFile ini = new InitializationFile("Plugins/LSPDFR/RichsPoliceEnhancements.ini");
 
@@ -66,17 +67,19 @@ namespace RichsPoliceEnhancements
             UncommonEventFrequency = ini.ReadInt32("Ambient Events", "UnommonEventFrequency", 20);
             RareEventFrequency = ini.ReadInt32("Ambient Events", "RareEventFrequency", 10);
             AssaultFrequency = ini.ReadString("Ambient Events", "AssaultFrequency", "off");
-            eventFrequencies.Add("Assault", AssaultFrequency);
+            EventFrequencies.Add("Assault", AssaultFrequency);
             CarJackingFrequency = ini.ReadString("Ambient Events", "CarJackingFrequency", "off");
-            eventFrequencies.Add("CarJacking", CarJackingFrequency);
+            EventFrequencies.Add("CarJacking", CarJackingFrequency);
             DrugDealFrequency = ini.ReadString("Ambient Events", "DrugDealFrequency", "off");
-            eventFrequencies.Add("DrugDeal", DrugDealFrequency);
+            EventFrequencies.Add("DrugDeal", DrugDealFrequency);
             DriveByFrequency = ini.ReadString("Ambient Events", "DriveByFrequency", "off");
-            eventFrequencies.Add("DriveBy", DriveByFrequency);
+            EventFrequencies.Add("DriveBy", DriveByFrequency);
 
             // BOLO Settings
             BOLOTimer = ini.ReadInt32("BOLO Settings", "BOLOTimer", 10);
+            BOLOTimer *= 60000;
             BOLOFrequency = ini.ReadInt32("BOLO Settings", "BOLOFrequency", 5);
+            BOLOFrequency *= 60000;
 
             // PRT Settings
             PRTToneTimer = ini.ReadInt32("Priority Radio Traffic Settings", "PRTToneTimer", 15);
@@ -84,7 +87,9 @@ namespace RichsPoliceEnhancements
 
             // Pursuit Update Settings
             PursuitUpdateTimer = ini.ReadInt32("Pursuit Update Settings", "PursuitUpdateTimer", 20);
+            PursuitUpdateTimer *= 1000;
             DispatchUpdates = ini.ReadBoolean("Pursuit Update Settings", "DispatchUpdates", false);
+            DisableNotifications = ini.ReadBoolean("Pursuit Update Settings", "DisableNotifications", false);
         }
     }
 }
