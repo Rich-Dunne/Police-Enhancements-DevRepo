@@ -8,9 +8,8 @@ namespace RichsPoliceEnhancements.Features
 {
     public class PursuitUpdates
     {
-        private static Vehicle suspectVeh;
-        private static int NotificationTimer = Settings.PursuitUpdateTimer *= 1000;
-        private static string[] arrestedAudio = new string[] {"SUSPECT_APPREHENDED", "SUSPECT_ARRESTED", "SUSPECT_IN_CUSTODY"};
+        private static Vehicle SuspectVehicle { get; set; } = null;
+        private static int NotificationTimer { get; } = Settings.PursuitUpdateTimer;
 
         private enum Direction
         {
@@ -37,30 +36,29 @@ namespace RichsPoliceEnhancements.Features
                 GameFiber.Sleep(5000);
                 if(Functions.GetActivePursuit() == null)
                 {
-                    Game.LogTrivial($"GetActivePursuit is null.");
+                    Game.LogTrivial($"Active pursuit is null.");
                     return;
                 }
 
-                suspectVeh = Functions.GetPursuitPeds(pursuit).Where(p => p && p.IsAlive && !Functions.IsPedACop(p) && p.IsInAnyVehicle(false)).FirstOrDefault()?.CurrentVehicle;
+                SuspectVehicle = Functions.GetPursuitPeds(pursuit).FirstOrDefault(p => p && p.IsAlive && !Functions.IsPedACop(p) && p.IsInAnyVehicle(false))?.CurrentVehicle;
 
-                if (suspectVeh)
+                if (SuspectVehicle)
                 {
-                    for(int i = 0; i < suspectVeh.Occupants.Count(); i++)
+                    for(int i = 0; i < SuspectVehicle.Occupants.Count(); i++)
                     {
-                        var occupant = suspectVeh.Occupants[i];
+                        var occupant = SuspectVehicle.Occupants[i];
                         if (occupant && occupant.IsAlive && Functions.IsPedInPursuit(occupant))
                         {
-                            GameFiber NotificationUpdaterFiber = new GameFiber(() => NotificationUpdater(occupant, vehiclesList, i));
-                            NotificationUpdaterFiber.Start();
+                            GameFiber.StartNew(() => NotificationUpdater(occupant, vehiclesList, i), "Notification Update Fiber");
                         }
                         GameFiber.Sleep(1000);
                     }
                 }
                 else
                 {
-                    Game.LogTrivial($"[RPE Pursuit Update]: suspectVeh is null.");
+                    Game.LogTrivial($"[RPE Pursuit Update]: Suspect vehicle is null.");
                 }
-            });
+            }, "Pursuit Suspect Collector Fiber");
         }
 
         private static void NotificationUpdater(Ped suspect, List<Vehicle> vehiclesList, int suspectNumber)
@@ -71,40 +69,32 @@ namespace RichsPoliceEnhancements.Features
 
             while (true)
             {
-                if (!suspect)
+                if (!SuspectIsValid(suspect))
                 {
-                    Game.LogTrivial($"[RPE Pursuit Update]: Suspect is invalid.  Stopping notifications.");
                     break;
                 }
-                if (!suspect.IsAlive)
+                if (Functions.GetActivePursuit() == null)
                 {
-                    Game.LogTrivial($"[RPE Pursuit Update]: Suspect is dead.  Stopping notifications.");
-                    Functions.PlayScannerAudio($"ATTENTION_ALL_UNITS SUSPECT_NEUTRALIZED");
+                    Game.LogTrivial($"[RPE Pursuit Update]: Pursuit is over.  Stopping notifications.");
                     break;
                 }
-                if(Functions.IsPedGettingArrested(suspect) || Functions.IsPedArrested(suspect))
-                {
-                    Game.LogTrivial($"[RPE Pursuit Update]: Suspect is arrested.  Stopping notifications.");
-                    Functions.PlayScannerAudio($"ATTENTION_ALL_UNITS {arrestedAudio[new Random().Next(arrestedAudio.Length)]}");
-                    break;
-                }
+
                 if (suspectVisualLost && !Functions.IsPedVisualLost(suspect))
                 {
                     suspectVisualLost = false;
                 }
-                if (Functions.IsPedVisualLost(suspect))
+                if (!suspectVisualLost && Functions.IsPedVisualLost(suspect))
                 {
-                    if (!suspectVisualLost)
-                    {
-                        Functions.PlayScannerAudio($"ATTENTION_ALL_UNITS EVADED ALL_UNITS_ATTEMPT_TO_REAQUIRE");
-                        suspectVisualLost = true;
-                    }
-                    Game.LogTrivial($"[RPE Pursuit Update]: Visual lost for suspect.  No notifications will be given until visual is regained.");
-                    GameFiber.Sleep(NotificationTimer);
+                    suspectVisualLost = true;
+                    NotifyVisualLost(suspectVisualLost);
                     continue;
                 }
+                else if (suspectVisualLost && !Functions.IsPedVisualLost(suspect))
+                {
+                    suspectVisualLost = false;
+                }
 
-                if(suspect && !Functions.IsPedVisualLost(suspect))
+                if (suspect && !Functions.IsPedVisualLost(suspect))
                 {
                     var direction = GetSuspectDirection();
                     var streetName = World.GetStreetName(World.GetStreetHash(suspect.Position));
@@ -112,34 +102,45 @@ namespace RichsPoliceEnhancements.Features
 
                     if (suspect.CurrentVehicle && suspect.CurrentVehicle.Driver == suspect)
                     {
-                        var trafficCondition = GetTrafficCondition();
-                        var trafficConditionColor = GetTrafficConditionColor();
-                        
-                        Game.LogTrivial($"[RPE Pursuit Update]: Suspect {suspectNumber} is heading {(Direction)direction} on {streetName}.  Speeds are {speed}mph, traffic is {(TrafficCondition)trafficCondition}.");
-                        Game.DisplayNotification($"~y~Automatic Pursuit Updates\n~w~Suspect {suspectNumber} is heading ~b~{(Direction)direction} ~w~on ~b~{streetName}~w~.  Speeds are ~b~{speed}mph~w~, traffic is {trafficConditionColor}{(TrafficCondition)trafficCondition}~w~.");
-
-                        if (Settings.DispatchUpdates && suspect.CurrentVehicle.Speed > 0f)
-                        {
-                            var attentionAudio = $"ATTENTION_ALL_UNITS_0{new Random().Next(1, 21)}";
-                            var headingAudio = $"SUSPECT_HEADING_0{new Random().Next(1, 4)}";
-                            var directionAudio = $"DIRECTION_BOUND_{((Direction)direction).ToString().ToUpper()}";
-                            var streetAudio = $"STREET_{streetName.Replace(" ", "_").ToUpper()}";
-                            Functions.PlayScannerAudio($"{attentionAudio} {headingAudio} {directionAudio} ON_03 {streetAudio}");
-                        }
+                        GetVehiclePursuitNotification(streetName, direction, speed);
                     }
                     else if (suspect.IsOnFoot && suspect.Speed > 2f)
                     {
-                        Game.LogTrivial($"[RPE Pursuit Update]: Suspect {suspectNumber} is running {(Direction)direction} on {streetName}.");
-                        Game.DisplayNotification($"~y~Automatic Pursuit Updates\n~w~Suspect {suspectNumber} is running ~b~{(Direction)direction} ~w~on ~b~{streetName}~w~.");
+                        GetFootPursuitNotification(streetName, direction);
                     }
                 }
-
-                if(Functions.GetActivePursuit() == null)
-                {
-                    Game.LogTrivial($"[RPE Pursuit Update]: Pursuit is over.  Stopping notifications.");
-                    break;
-                }
                 GameFiber.Sleep(NotificationTimer);
+            }
+
+            void GetVehiclePursuitNotification(string streetName, int direction, double speed)
+            {
+                var trafficCondition = GetTrafficCondition();
+                var trafficConditionColor = GetTrafficConditionColor();
+
+                Game.LogTrivial($"[RPE Pursuit Update]: Suspect {suspectNumber} is heading {(Direction)direction} on {streetName}.  Speeds are {speed}mph, traffic is {(TrafficCondition)trafficCondition}.");
+                if (!Settings.DisableNotifications)
+                {
+                    Game.DisplayNotification($"~y~Automatic Pursuit Updates\n~w~Suspect {suspectNumber} is heading ~b~{(Direction)direction} ~w~on ~b~{streetName}~w~.  Speeds are ~b~{speed}mph~w~, traffic is {trafficConditionColor}{(TrafficCondition)trafficCondition}~w~.");
+                }
+
+                if (Settings.DispatchUpdates && suspect.CurrentVehicle.Speed > 0f)
+                {
+                    PlayDispatchAudio(streetName, direction);
+                }
+            }
+
+            void GetFootPursuitNotification(string streetName, int direction)
+            {
+                Game.LogTrivial($"[RPE Pursuit Update]: Suspect {suspectNumber} is running {(Direction)direction} on {streetName}.");
+
+                if (!Settings.DisableNotifications)
+                {
+                    Game.DisplayNotification($"~y~Automatic Pursuit Updates\n~w~Suspect {suspectNumber} is running ~b~{(Direction)direction} ~w~on ~b~{streetName}~w~.");
+                }
+                if (Settings.DispatchUpdates)
+                {
+                    PlayDispatchAudio(streetName, direction);
+                }
             }
 
             int GetSuspectDirection()
@@ -178,7 +179,7 @@ namespace RichsPoliceEnhancements.Features
                 }
                 foreach (Vehicle v in suspect.CurrentVehicle?.Driver.GetNearbyVehicles(16))
                 {
-                    if (v && v.HasDriver && !v.IsPoliceVehicle && v != suspectVeh)
+                    if (v && v.HasDriver && !v.IsPoliceVehicle && v != SuspectVehicle)
                     {
                         //Game.LogTrivial("[RPE Pursuit Update]: Added nearby vehicle to list");
                         vehiclesList.Add(v);
@@ -220,6 +221,46 @@ namespace RichsPoliceEnhancements.Features
                 }
                 return "~w~";
             }
+        }
+
+        private static void PlayDispatchAudio(string streetName, int direction)
+        {
+            var attentionAudio = $"ATTENTION_ALL_UNITS_0{new Random().Next(1, 21)}";
+            var headingAudio = $"SUSPECT_HEADING_0{new Random().Next(1, 4)}";
+            var directionAudio = $"DIRECTION_BOUND_{((Direction)direction).ToString().ToUpper()}";
+            var streetAudio = $"STREET_{streetName.Replace(" ", "_").ToUpper()}";
+            Functions.PlayScannerAudio($"{attentionAudio} {headingAudio} {directionAudio} ON_03 {streetAudio}");
+        }
+
+        private static bool SuspectIsValid(Ped suspect)
+        {
+            var arrestAudio = new string[] { "SUSPECT_APPREHENDED", "SUSPECT_ARRESTED", "SUSPECT_IN_CUSTODY" };
+            if (!suspect)
+            {
+                Game.LogTrivial($"[RPE Pursuit Update]: Suspect is invalid.  Stopping notifications.");
+                return false;
+            }
+            if (!suspect.IsAlive)
+            {
+                Game.LogTrivial($"[RPE Pursuit Update]: Suspect is dead.  Stopping notifications.");
+                Functions.PlayScannerAudio($"ATTENTION_ALL_UNITS SUSPECT_NEUTRALIZED");
+                return false;
+            }
+            if (Functions.IsPedGettingArrested(suspect) || Functions.IsPedArrested(suspect))
+            {
+                Game.LogTrivial($"[RPE Pursuit Update]: Suspect is arrested.  Stopping notifications.");
+                Functions.PlayScannerAudio($"ATTENTION_ALL_UNITS {arrestAudio[new Random().Next(arrestAudio.Length)]}");
+                return false;
+            }
+
+            return true;
+        }
+
+        private static void NotifyVisualLost(bool suspectVisualLost)
+        {
+            Functions.PlayScannerAudio($"ATTENTION_ALL_UNITS EVADED ALL_UNITS_ATTEMPT_TO_REAQUIRE");
+            Game.LogTrivial($"[RPE Pursuit Update]: Visual lost for suspect.  No notifications will be given until visual is regained.");
+            GameFiber.Sleep(NotificationTimer);
         }
     }
 }
