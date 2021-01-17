@@ -2,7 +2,7 @@
 using Rage.Native;
 using System.Drawing;
 
-namespace RichsPoliceEnhancements
+namespace RichsPoliceEnhancements.Utils
 {
     /// <summary>
     /// Vehicle extensions

@@ -4,14 +4,14 @@ using System.Linq;
 using Rage;
 using LSPD_First_Response.Mod.API;
 
-namespace RichsPoliceEnhancements
+namespace RichsPoliceEnhancements.Features
 {
     public class AISirenCycle
     {
         internal static void Main()
         {
             LHandle pursuit = null;
-            List<Vehicle> pursuitVehicles = new List<Vehicle>();
+            var pursuitVehicles = new List<Vehicle>();
             bool pursuitCopsCollectorStarted = false;
 
             while (true)
@@ -21,14 +21,14 @@ namespace RichsPoliceEnhancements
                     pursuit = Functions.GetActivePursuit();
 
                     Game.LogTrivial("[RPE AI Siren Cycle]: Beginning pursuit cop collector");
-                    GameFiber PursuitCopsCollectorFiber = new GameFiber(() => PursuitCopsCollector(pursuit, pursuitVehicles));
+                    GameFiber PursuitCopsCollectorFiber = new GameFiber(() => PursuitCopsCollector(pursuit, pursuitVehicles), "Pursuit Cops Collector Fiber");
                     PursuitCopsCollectorFiber.Start();
                     pursuitCopsCollectorStarted = true;
                 }
 
                 if (pursuit != null && Functions.GetActivePursuit() == null)
                 {
-                    Game.LogTrivial("[RPE AI Siren Cycle]: pursuit variable is not null, but the pursuit is no longer running");
+                    Game.LogTrivial("[RPE AI Siren Cycle]: Pursuit is no longer running");
                     pursuit = null;
                     pursuitVehicles.Clear();
                     pursuitCopsCollectorStarted = false;
@@ -38,7 +38,7 @@ namespace RichsPoliceEnhancements
             }
         }
 
-        internal static void PursuitCopsCollector(LHandle pursuit, List<Vehicle> pursuitVehicles)
+        private static void PursuitCopsCollector(LHandle pursuit, List<Vehicle> pursuitVehicles)
         {
             while (Functions.GetActivePursuit() != null)
             {
@@ -48,14 +48,14 @@ namespace RichsPoliceEnhancements
                     pursuitVehicles.Add(veh);
 
                     Game.LogTrivial("[RPE AI Siren Cycle]: Starting vehicle's personal siren cycle fiber");
-                    GameFiber AISirenCyclerFiber = new GameFiber(() => AISirenCycler(pursuit, veh));
+                    GameFiber AISirenCyclerFiber = new GameFiber(() => AISirenCycler(pursuit, veh), "Siren Cycler Fiber");
                     AISirenCyclerFiber.Start();
                 }
                 GameFiber.Yield();
             }
         }
 
-        internal static void AISirenCycler(LHandle pursuit, Vehicle policeVeh)
+        private static void AISirenCycler(LHandle pursuit, Vehicle policeVeh)
         {
             Game.LogTrivial($"[RPE AI Siren Cycle]: In the siren cycler");
             Game.LogTrivial($"[RPE AI Siren Cycle]: IsPursuitStillRunning: {Functions.IsPursuitStillRunning(pursuit)}");

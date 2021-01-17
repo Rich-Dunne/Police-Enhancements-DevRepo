@@ -6,14 +6,16 @@ using Rage;
 using LSPD_First_Response.Mod.API;
 using LSPD_First_Response.Engine.Scripting.Entities;
 using System.IO;
+using RichsPoliceEnhancements.Utils;
 
-namespace RichsPoliceEnhancements
+namespace RichsPoliceEnhancements.Features
 {
     // TODO:
     // - Camera focus on BOLO if nearby
     internal class BOLO
     {
-        private static bool BOLOActive = false;
+        private static SoundPlayer SoundPlayer { get; } = new SoundPlayer(Directory.GetCurrentDirectory() + @"\lspdfr\audio\sfx\AlertTone.wav");
+        private static bool BOLOActive { get; set; } = false;
 
         private enum Direction
         {
@@ -23,6 +25,7 @@ namespace RichsPoliceEnhancements
             west = 3
         }
 
+        // TODO: Make this a configurable XML
         //BOLO is in regards to...
         private static string[] boloReasons = {
             "a warrant out of Los Santos County",
@@ -151,23 +154,16 @@ namespace RichsPoliceEnhancements
             "a caller stating the vehicle was driving recklessly"
         };
 
-        internal static void Main(int BOLOTimer, int BOLOFrequency)
+        internal static void Main()
         {
-            var soundPlayer = new SoundPlayer(Directory.GetCurrentDirectory() + @"\lspdfr\audio\sfx\AlertTone.wav");
-            Game.LogTrivial($"[RPE BOLO]: BOLO fiber started with a timer of {BOLOTimer / 60000} minutes.");
+            Game.LogTrivial($"[RPE BOLO]: BOLO fiber started with a timer of {Settings.BOLOTimer / 60000} minutes.");
 
             GameFiber.Sleep(60000);  // Disable for testing
             while (true)
             {
                 if (!BOLOActive && Functions.GetActivePursuit() == null)
                 {
-                    var boloVehiclesList = new List<Vehicle>();
-                    if (boloVehiclesList.Count > 0)
-                    {
-                        boloVehiclesList.Clear();
-                    }
-
-                    var boloVehicle = FindBOLOVehicle(boloVehiclesList);
+                    var boloVehicle = FindBOLOVehicle();
                     if (boloVehicle)
                     {
                         boloVehicle.IsPersistent = true;
@@ -182,68 +178,75 @@ namespace RichsPoliceEnhancements
                 }
                 else
                 {
-                    Game.LogTrivial($"[RPE BOLO]: BOLO is already active or no suitable vehicles found.  Trying again in {BOLOFrequency / 60000} minutes."); // Disable for testing
+                    Game.LogTrivial($"[RPE BOLO]: BOLO is already active or no suitable vehicles found.  Trying again in {Settings.BOLOFrequency / 60000} minutes."); // Disable for testing
                 }
-                GameFiber.Sleep(BOLOFrequency);
-            }
-
-            void BeginBOLO(Vehicle boloVehicle, Ped boloSuspect)
-            {
-                BOLOActive = true;
-                var startTime = Game.GameTime;
-                var oldTime = Game.GameTime;
-                DisplayBOLOInfo(soundPlayer, boloVehicle);
-
-                Game.LogTrivial($"BOLOTimer: {BOLOTimer}");
-                while (boloVehicle && boloSuspect)
-                {
-                    var difference = Game.GameTime - oldTime;
-                    if (Functions.IsPedArrested(boloSuspect) || (Functions.GetCurrentPullover() != null && Functions.GetPulloverSuspect(Functions.GetCurrentPullover()) == boloSuspect))
-                    {
-                        EndBOLO(boloVehicle, boloSuspect, $"~r~~h~BOLO ALERT - CANCELLED~h~\n~g~You located the suspect(s).");
-                        Game.LogTrivial($"[RPE BOLO]: BOLO ending, suspect stopped or arrested by player.");
-                        break;
-                    }
-                    if (Game.GameTime - startTime >= BOLOTimer)
-                    {
-                        EndBOLO(boloVehicle, boloSuspect, $"~r~~h~BOLO ALERT - CANCELLED~h~\n~w~You failed to locate the suspect(s) in time.");
-                        Game.LogTrivial($"[RPE BOLO]: BOLO ending, player failed to locate suspect(s) in time.");
-                        break;
-                    }
-                    if (difference >= 60000 && UpdateCheck(boloVehicle, boloSuspect))
-                    {
-                        oldTime = Game.GameTime;
-                        DisplayBOLOInfo(soundPlayer, boloVehicle, true);
-                    }
-                    GameFiber.Sleep(1000);
-                }
-            }
-
-            void EndBOLO(Vehicle boloVehicle, Ped boloSuspect, string message)
-            {
-                soundPlayer.Play();
-                Game.DisplayNotification(message);
-                boloVehicle.IsPersistent = false;
-                boloSuspect.IsPersistent = false;
-                BOLOActive = false;
+                GameFiber.Sleep(Settings.BOLOFrequency);
             }
         }
 
-        private static Vehicle FindBOLOVehicle(List<Vehicle> boloVehiclesList)
+        private static void BeginBOLO(Vehicle boloVehicle, Ped boloSuspect)
+        {
+            BOLOActive = true;
+            var startTime = Game.GameTime;
+            var oldTime = Game.GameTime;
+            DisplayBOLOInfo(boloVehicle);
+
+            Game.LogTrivial($"BOLOTimer: {Settings.BOLOTimer/60000}");
+            while (boloVehicle && boloSuspect)
+            {
+                var difference = Game.GameTime - oldTime;
+                if (Functions.IsPedArrested(boloSuspect) || (Functions.GetCurrentPullover() != null && Functions.GetPulloverSuspect(Functions.GetCurrentPullover()) == boloSuspect))
+                {
+                    EndBOLO(boloVehicle, boloSuspect, $"~r~~h~BOLO ALERT - CANCELLED~h~\n~g~You located the suspect(s).");
+                    Game.LogTrivial($"[RPE BOLO]: BOLO ending, suspect stopped or arrested by player.");
+                    break;
+                }
+                if (Game.GameTime - startTime >= Settings.BOLOTimer)
+                {
+                    EndBOLO(boloVehicle, boloSuspect, $"~r~~h~BOLO ALERT - CANCELLED~h~\n~w~You failed to locate the suspect(s) in time.");
+                    Game.LogTrivial($"[RPE BOLO]: BOLO ending, player failed to locate suspect(s) in time.");
+                    break;
+                }
+                if (difference >= 60000 && UpdateCheck(boloVehicle, boloSuspect))
+                {
+                    oldTime = Game.GameTime;
+                    DisplayBOLOInfo(boloVehicle, true);
+                }
+                GameFiber.Sleep(1000);
+            }
+        }
+
+        private static Vehicle FindBOLOVehicle()
         {
             Game.LogTrivial($"[RPE BOLO]: Looking for BOLO vehicles");
-            var pulloverVehicle = GetPulloverVehicle();
-            var boloVehicles = World.GetAllVehicles().Where(x => x && x.IsCar && !x.IsPoliceVehicle && !x.HasSiren && !x.HasTowArm && x != Game.LocalPlayer.Character.CurrentVehicle && x != Game.LocalPlayer.Character.LastVehicle && x.HasDriver && x.Driver.IsAlive && x != pulloverVehicle);
+            List<Vehicle> possibleBOLOVehicles = GetPossibleBOLOVehicles();
 
-            AddBOLOVehiclesToList();
-
-            if (boloVehiclesList.Count > 0)
+            if (possibleBOLOVehicles.Count > 0)
             {
                 return ReturnBOLOVehicleToBeUsed();
             }
             else
             {
                 return null;
+            }
+
+            List<Vehicle> GetPossibleBOLOVehicles()
+            {
+                var boloVehiclesList = new List<Vehicle>();
+                var pulloverVehicle = GetPulloverVehicle();
+                var potentialBOLOVehicles = World.GetAllVehicles().Where(x => x && x.IsCar && !x.IsPoliceVehicle && !x.HasSiren && !x.HasTowArm && x != Game.LocalPlayer.Character.CurrentVehicle && x != Game.LocalPlayer.Character.LastVehicle && x.HasDriver && x.Driver.IsAlive && x != pulloverVehicle);
+                
+                foreach (Vehicle vehicle in potentialBOLOVehicles.Where(x => x))
+                {
+                    var suspectPersona = Functions.GetPersonaForPed(vehicle.Driver);
+                    if (suspectPersona.Wanted)
+                    {
+                        boloVehiclesList.Add(vehicle);
+                        Game.LogTrivial("[RPE BOLO]: BOLO vehicle added to list.");
+                    }
+                }
+
+                return boloVehiclesList;
             }
 
             Vehicle GetPulloverVehicle()
@@ -256,32 +259,16 @@ namespace RichsPoliceEnhancements
                 return null;
             }
 
-            void AddBOLOVehiclesToList()
-            {
-                foreach (Vehicle vehicle in boloVehicles)
-                {
-                    if (vehicle)
-                    {
-                        var suspectPersona = Functions.GetPersonaForPed(vehicle.Driver);
-                        if (suspectPersona.Wanted)
-                        {
-                            boloVehiclesList.Add(vehicle);
-                            Game.LogTrivial("[RPE BOLO]: BOLO vehicle added to list.");
-                        }
-                    }
-                }
-            }
-
             Vehicle ReturnBOLOVehicleToBeUsed()
             {
-                int r = new Random().Next(0, boloVehiclesList.Count);
+                int r = new Random().Next(0, possibleBOLOVehicles.Count);
                 //Game.LogTrivial($"[RPE BOLO]: Random number between 0 and {boloVehiclesList.Count}: {r}");
                 Game.LogTrivial("[RPE BOLO]: Assigning boloVeh.");
-                return boloVehiclesList[r];
+                return possibleBOLOVehicles[r];
             }
         }
 
-        private static void DisplayBOLOInfo(SoundPlayer soundPlayer, Vehicle boloVeh, bool update = false)
+        private static void DisplayBOLOInfo(Vehicle boloVeh, bool update = false)
         {
             string boloColor;
             try
@@ -298,7 +285,7 @@ namespace RichsPoliceEnhancements
             var worldZone = Functions.GetZoneAtPosition(boloVeh.Position).GameName;
             var streetName = World.GetStreetName(World.GetStreetHash(boloVeh.Position));
             var boloReason = boloReasons[new Random().Next(0, boloReasons.Length)];
-            soundPlayer.Play();
+            SoundPlayer.Play();
 
             if (!update)
             {
@@ -349,6 +336,15 @@ namespace RichsPoliceEnhancements
                 return true;
             }
             return false;
+        }
+
+        private static void EndBOLO(Vehicle boloVehicle, Ped boloSuspect, string message)
+        {
+            SoundPlayer.Play();
+            Game.DisplayNotification(message);
+            boloVehicle.IsPersistent = false;
+            boloSuspect.IsPersistent = false;
+            BOLOActive = false;
         }
     }
 }

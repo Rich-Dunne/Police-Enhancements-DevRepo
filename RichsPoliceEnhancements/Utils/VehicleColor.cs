@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace RichsPoliceEnhancements
+namespace RichsPoliceEnhancements.Utils
 {
     //Credit to Stealth22 for this struct
     /// <summary>

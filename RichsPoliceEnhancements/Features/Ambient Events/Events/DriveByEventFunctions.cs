@@ -9,119 +9,178 @@ namespace RichsPoliceEnhancements
 {
     class DriveByEventFunctions
     {
-        public static void RunEventFunctions(Ped player, List<Ped> nearbyPeds, List<EventPed> eventPeds, List<EventVehicle> eventVehicles, List<Blip> eventBlips)
+        internal static void BeginEvent(AmbientEvent @event)
         {
-            Game.LogTrivial($"[Rich Ambiance] Starting DriveBy event.");
-            if (FindDriver(nearbyPeds, eventPeds) != null && FindTarget(nearbyPeds, eventPeds, eventBlips) != null)
-            {
-                DriveByInteraction(eventPeds, eventVehicles, eventBlips);
-            }
-            else
-            {
-                Game.LogTrivial($"[Rich Ambiance] Driver or target returned null.  Ending event.");
-            }
-        }
+            var attempts = 1;
+            var drivers = new List<Ped>();
+            var victims = new List<Ped>();
+            Game.LogTrivial($"[RPE Ambient Event]: Starting DriveBy event.");
 
-        private static Ped FindDriver(List<Ped> pedList, List<EventPed> eventPeds)
-        {
-            foreach (Ped p in pedList.Where(p => p.IsInAnyVehicle(false) && p.CurrentVehicle.IsCar && p.CurrentVehicle.Driver == p))
+            LoopToFindEventPeds();
+
+
+            if (@event.EventPeds.Count < 2)
             {
-                if (p.Exists() && p.IsValid() && p.IsAlive && (p.RelationshipGroup == RelationshipGroup.AmbientGangBallas || p.RelationshipGroup == RelationshipGroup.AmbientGangFamily || p.RelationshipGroup == RelationshipGroup.AmbientGangMexican))
+                Game.LogTrivial($"[RPE Ambient Event]: Unable to find suitable event peds after 100 attempts.  Ending event.");
+                return;
+            }
+
+            GameFiber DriveByInteractionFiber = new GameFiber(() => EventProcess(@event), "RPE DriveBy Interaction Fiber");
+            DriveByInteractionFiber.Start();
+
+            void LoopToFindEventPeds()
+            {
+                while (@event.EventPeds.Count < 2 && attempts <= 100 && !Functions.IsCalloutRunning() && Functions.GetActivePursuit() == null)
                 {
-                    Game.LogTrivial($"[Rich Ambiance] Driver relationship group: {p.RelationshipGroup.Name}");
-                    Ped driver = p;
-                    driver.IsPersistent = true;
-                    driver.BlockPermanentEvents = true;
-                    //Blip blip = driver.AttachBlip();
-                    //blip.Color = Color.Red;
-                    //blips.Add(blip);
-                    //eventPeds.Add(new EventPed("DriveBy", driver));
-                    return driver;
+                    drivers = FindDrivers();
+                    victims = FindVictims();
+                    FindEventPedPair();
+                    if (@event.EventPeds.Count == 2)
+                    {
+                        Game.LogTrivial($"Success on attempt {attempts}");
+                        break;
+                    }
+                    @event.EventPeds.Clear();
+                    drivers.Clear();
+                    victims.Clear();
+                    attempts++;
+                    GameFiber.Sleep(500);
                 }
             }
-            Game.LogTrivial($"[Rich Ambiance] Could not find driver.");
-            return null;
-        }
 
-        private static Ped FindTarget(List<Ped> pedList, List<EventPed> eventPeds, List<Blip> eventBlips)
-        {
-            Ped driver = eventPeds[0].Ped;
-            Ped target;
-            //List<Ped> sortedList = pedList.OrderBy(p => p.DistanceTo(driver) <= 10f).ToList();
+            List<Ped> NearbyPeds() => World.GetAllPeds().Where(p => PedIsRelevant(p)).ToList();
 
-            foreach (Ped p in pedList)
+            bool PedIsRelevant(Ped ped)
             {
-                if (p.DistanceTo(driver.GetOffsetPositionFront(15f)) <= 20f && Math.Abs(driver.Position.Z - p.Position.Z) <= 10f && p.RelationshipGroup != driver.RelationshipGroup)
+                if (ped && ped.IsAlive && ped.Position.DistanceTo(Game.LocalPlayer.Character.Position) < 100f && !ped.IsPlayer && !ped.IsInjured && !ped.Model.Name.Contains("A_C") && ped.RelationshipGroup != RelationshipGroup.Cop)
                 {
-                    //Game.LogTrivial($"Target relationship group: {p.RelationshipGroup.Name}");
-                    // Ped Settings
-                    target = p;
-                    target.IsPersistent = true;
-                    target.BlockPermanentEvents = true;
-
-                    // Blip Settings
-                    Blip blip = target.AttachBlip();
-                    blip.Color = Color.White;
-                    eventBlips.Add(blip);
-
-
-                    //eventPeds.Add(new EventPed("DriveBy", target));
-                    Game.LogTrivial($"[Rich Ambiance] Target found.");
-                    return target;
+                    return true;
+                }
+                else
+                {
+                    return false;
                 }
             }
-            Game.LogTrivial($"[Rich Ambiance] Could not find target.");
-            return null;
+
+            List<Ped> FindDrivers()
+            {
+                return NearbyPeds().Where(p => p.IsInAnyVehicle(false) && (p.RelationshipGroup == RelationshipGroup.AmbientGangBallas || p.RelationshipGroup == RelationshipGroup.AmbientGangFamily || p.RelationshipGroup == RelationshipGroup.AmbientGangMexican)).ToList();
+            }
+
+            List<Ped> FindVictims()
+            {
+                return NearbyPeds().Where(p => !drivers.Contains(p) && drivers.Any(x => p.DistanceTo2D(x) <= 15f) && drivers.Any(x => Math.Abs(x.Position.Z - p.Position.Z) <= 5f) && drivers.Any(x => x.RelationshipGroup != p.RelationshipGroup) && p.CurrentVehicle != drivers.Any(x => x.CurrentVehicle)).ToList();
+            }
+
+            void FindEventPedPair()
+            {
+                // If driver is within 20f of any ped from victims, assign driver and that victim ped as event peds
+                var driver = drivers.FirstOrDefault(x => victims.Any(y => y.DistanceTo2D(x) <= 20f));
+                if (!driver)
+                {
+                    Game.LogTrivial($"[RPE Ambient Event]: No drivers found with a suitable victim nearby.");
+                    @event.Cleanup();
+                    return;
+                }
+                var victim = victims.FirstOrDefault(x => x.DistanceTo2D(driver) <= 20f);
+                if (!victim)
+                {
+                    Game.LogTrivial($"[RPE Ambient Event]: No victim found within range of the driver.");
+                    @event.Cleanup();
+                    return;
+                }
+
+                new EventPed(@event, driver, Role.PrimarySuspect, true, (BlipSprite)229);
+                new EventPed(@event, victim, Role.Victim, false);
+            }
         }
 
-        private static void DriveByInteraction(List<EventPed> eventPeds, List<EventVehicle> eventVehicles, List<Blip> eventBlips)
+        private static void EventProcess(AmbientEvent @event)
         {
-            WeaponHash[] weaponPool = { WeaponHash.MicroSMG, WeaponHash.APPistol, WeaponHash.CombatPistol, WeaponHash.Pistol, WeaponHash.Pistol50, WeaponHash.Smg };
-            Ped driver = eventPeds[0].Ped;
-            Ped target = eventPeds[1].Ped;
-            driver.Tasks.Clear();
+            WeaponHash[] weaponPool = { WeaponHash.MicroSMG, WeaponHash.APPistol, WeaponHash.CombatPistol, WeaponHash.Pistol, WeaponHash.Pistol50};
+            var driver = @event.EventPeds.FirstOrDefault(x => x.Role == Role.PrimarySuspect);
+            var victim = @event.EventPeds.FirstOrDefault(x => x.Role == Role.Victim);
+            Functions.SetPedResistanceChance(driver.Ped, 100);
+            Game.LogTrivial($"[RPE Ambient Event]: Running DriveBy interaction.");
 
-            if(driver.Inventory.Weapons.Count == 0)
+            if (!driver.Ped || !victim.Ped)
             {
-                Game.LogTrivial($"[Rich Ambiance] Giving ped random weapon from pool");
-                driver.Inventory.GiveNewWeapon(weaponPool[new Random().Next(0, weaponPool.Length)], 50, true);
+                Game.LogTrivial($"[RPE Ambient Event]: Driver or victim is null.  Ending event.");
+                @event.Cleanup();
+                return;
             }
 
-            foreach(WeaponDescriptor w in driver.Inventory.Weapons)
+            driver.Ped.Tasks.Clear();
+            GiveDriverWeapon();
+            DriverEngageThenFlee();
+            EndEvent(@event);
+
+            void GiveDriverWeapon()
             {
-                Game.LogTrivial($"[Rich Ambiance] Weapon hash: {w.Hash.ToString()}");
+                if (driver.Ped.Inventory.Weapons.Count == 0)
+                {
+                    Game.LogTrivial($"[RPE Ambient Event] Giving driver random weapon from pool");
+                    driver.Ped.Inventory.GiveNewWeapon(weaponPool[new Random().Next(0, weaponPool.Length)], 50, true);
+                }
+                foreach(WeaponDescriptor weapon in driver.Ped.Inventory.Weapons)
+                {
+                    Game.LogTrivial($"[RPE Ambient Event] Weapon hash: {weapon.Hash}");
+                }
             }
 
-            //Game.LogTrivial($"Roll down windows");
-            //Rage.Native.NativeFunction.Natives.x7AD9E6CE657D69E3(driver.Ped.CurrentVehicle, 0); // roll driver window down
-            //Rage.Native.NativeFunction.Natives.x7AD9E6CE657D69E3(driver.Ped.CurrentVehicle, 1); // roll passenger window down
-            //Rage.Native.NativeFunction.Natives.x9E5B5E4D2CCD2259(driver.Ped.CurrentVehicle, 0); // smash window
-
-            Game.LogTrivial($"[Rich Ambiance] Drive to target's location");
-            driver.Tasks.DriveToPosition(target.Position, 20f, VehicleDrivingFlags.Normal);
-            //driver.Ped.Tasks.ChaseWithGroundVehicle(target.Ped);
-
-            Game.LogTrivial($"[Rich Ambiance] Ped shooting at target");
-            Rage.Native.NativeFunction.Natives.x10AB107B887214D8(driver,target,0); // vehicle shoot task
-
-            if (Settings.EventBlips)
+            void DriverEngageThenFlee()
             {
-                Blip blip = driver.AttachBlip();
-                blip.Sprite = BlipSprite.GangVehicle;
-                blip.Color = Color.Red;
-                eventBlips.Add(blip);
+                Game.LogTrivial($"[RPE Ambient Event] Driver shooting at victim");
+                Rage.Native.NativeFunction.Natives.x10AB107B887214D8(driver.Ped, victim.Ped, 0); // vehicle shoot task
+                driver.Blip.Alpha = 100;
+
+                GameFiber.Sleep(3000);
+                driver.Ped.Tasks.Clear();
+                driver.Ped.Tasks.CruiseWithVehicle(30f, VehicleDrivingFlags.Emergency);
+                Game.LogTrivial($"[RPE Ambient Event] Done assigning tasks.");
             }
+        }
 
-            GameFiber.Sleep(3000);
-            driver.Tasks.Clear();
-            driver.Tasks.CruiseWithVehicle(30f, VehicleDrivingFlags.Emergency);
-            Game.LogTrivial($"[Rich Ambiance] Done assigning tasks.");
+        private static void EndEvent(AmbientEvent @event)
+        {
+            var driver = @event.EventPeds.FirstOrDefault(x => x.Role == Role.PrimarySuspect);
+            var victim = @event.EventPeds.FirstOrDefault(x => x.Role == Role.Victim);
+            var oldDistance = Game.LocalPlayer.Character.DistanceTo2D(driver.Ped);
 
-            // We run this loop so the event stays active until something happens.  Don't want to start another event while the player is still interacting with this one.
-            //while (!AmbientEvent.PrematureEndCheck(eventPeds, eventVehicles))
-            //{
-            //    GameFiber.Yield();
-            //}
+            while (true)
+            {
+                if (!driver.Ped || !victim.Ped || !driver.Ped.IsAlive || !victim.Ped.IsAlive || Functions.IsPedGettingArrested(driver.Ped))
+                {
+                    Game.LogTrivial($"[RPE Ambient Event]: Driver or victim is null or dead, or driver is arrested.  Ending event.");
+                    @event.Cleanup();
+                    return;
+                }
+
+                if (Game.LocalPlayer.Character.DistanceTo2D(driver.Ped) > 150f)
+                {
+                    Game.LogTrivial($"[RPE Ambient Event]: Player is too far away.  Ending event.");
+                    @event.Cleanup();
+                    return;
+                }
+
+                if (Functions.GetActivePursuit() != null && Functions.IsPedInPursuit(driver.Ped))
+                {
+                    Game.LogTrivial($"[RPE Ambient Event]: Player is in pursuit of driver.  Ending event.");
+                    @event.Cleanup();
+                    return;
+                }
+
+                if (Math.Abs(Game.LocalPlayer.Character.DistanceTo2D(driver.Ped) - oldDistance) > 0.15 && Game.LocalPlayer.Character.DistanceTo2D(driver.Ped) > oldDistance && driver.Blip.Alpha > 0f)
+                {
+                    driver.Blip.Alpha -= 0.001f;
+                }
+                else if (Math.Abs(Game.LocalPlayer.Character.DistanceTo2D(driver.Ped) - oldDistance) > 0.15 && Game.LocalPlayer.Character.DistanceTo2D(driver.Ped) < oldDistance && driver.Blip.Alpha < 1.0f)
+                {
+                    driver.Blip.Alpha += 0.01f;
+                }
+                oldDistance = Game.LocalPlayer.Character.DistanceTo2D(driver.Ped);
+                GameFiber.Yield();
+            }
         }
     }
 }

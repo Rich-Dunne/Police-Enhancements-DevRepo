@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Drawing;
 using Rage;
 using LSPD_First_Response.Mod.API;
 using System.Linq;
@@ -7,34 +6,51 @@ using System;
 
 namespace RichsPoliceEnhancements
 {
-    internal class DrugDealEventFunctions
+    internal static class DrugDealEventFunctions
     {
         internal static void BeginEvent(AmbientEvent @event)
         {
-            Game.LogTrivial($"[RPE Ambient Event] Starting DrugDeal event.");
+            var attempts = 1;
+            var dealers = new List<Ped>();
+            var buyers = new List<Ped>();
+            Game.LogTrivial($"[RPE Ambient Event]: Starting DrugDeal event.");
 
-            var dealerPed = FindDealer();
-            if(dealerPed == null)
+            LoopToFindEventPeds();
+
+            if (@event.EventPeds.Count < 2)
             {
-                Game.LogTrivial($"[RPE Ambient Event] Dealer ped is null, ending event.");
+                Game.LogTrivial($"[RPE Ambient Event]: Unable to find suitable event peds after 100 attempts.  Ending event.");
                 return;
             }
 
-            var buyerPed = FindBuyer(dealerPed);
-            if(buyerPed == null)
-            {
-                Game.LogTrivial($"[RPE Ambient Event] Buyer ped is null, ending event.");
-                return;
-            }
-
-            GameFiber DrugDealInteractionFiber = new GameFiber(() => DrugDealFootInteraction(@event), "Drug Deal Interaction Fiber");
+            GameFiber DrugDealInteractionFiber = new GameFiber(() => EventProcess(@event), "RPE DrugDeal Interaction Fiber");
             DrugDealInteractionFiber.Start();
+
+            void LoopToFindEventPeds()
+            {
+                while (@event.EventPeds.Count < 2 && attempts <= 100 && !Functions.IsCalloutRunning() && Functions.GetActivePursuit() == null)
+                {
+                    dealers = FindDealers();
+                    buyers = FindBuyers();
+                    FindEventPedPair();
+                    if (@event.EventPeds.Count == 2)
+                    {
+                        Game.LogTrivial($"Success on attempt {attempts}");
+                        break;
+                    }
+                    @event.EventPeds.Clear();
+                    dealers.Clear();
+                    buyers.Clear();
+                    attempts++;
+                    GameFiber.Sleep(500);
+                }
+            }
 
             List<Ped> NearbyPeds() => World.GetAllPeds().Where(p => PedIsRelevant(p)).ToList();
 
             bool PedIsRelevant(Ped ped)
             {
-                if (ped && ped.IsAlive && ped.Position.DistanceTo(Game.LocalPlayer.Character.Position) < 100f && !ped.IsPlayer && !ped.IsInjured && !ped.Model.Name.Contains("A_C"))
+                if (ped && ped.IsAlive && ped.Position.DistanceTo(Game.LocalPlayer.Character.Position) < 100f && !ped.IsPlayer && !ped.IsInjured && !ped.Model.Name.Contains("A_C") && ped.RelationshipGroup != RelationshipGroup.Cop)
                 {
                     return true;
                 }
@@ -44,50 +60,55 @@ namespace RichsPoliceEnhancements
                 }
             }
 
-            EventPed FindDealer()
+            List<Ped> FindDealers()
             {
-                var dealer = NearbyPeds().Where(p => p.IsOnFoot && p.RelationshipGroup == RelationshipGroup.AmbientGangBallas || p.RelationshipGroup == RelationshipGroup.AmbientGangFamily || p.RelationshipGroup == RelationshipGroup.AmbientGangMexican).FirstOrDefault();
-                if (!dealer)
-                {
-                    Game.LogTrivial($"[RPE Ambient Event] Dealer returned null.  Ending event.");
-                    return null;
-                }
-                else
-                {
-                    return new EventPed(@event, dealer, Role.PrimarySuspect);
-                }
+                return NearbyPeds().Where(p => p.IsOnFoot && p.RelationshipGroup == RelationshipGroup.AmbientGangBallas || p.RelationshipGroup == RelationshipGroup.AmbientGangFamily || p.RelationshipGroup == RelationshipGroup.AmbientGangMexican).ToList();
             }
 
-            EventPed FindBuyer(EventPed dealer)
+            List<Ped> FindBuyers()
             {
-                var buyer = NearbyPeds().OrderBy(p => p.DistanceTo2D(dealer.Ped)).Where(p => p.DistanceTo2D(dealer.Ped) > 0 && Math.Abs(p.Position.Z - dealer.Ped.Position.Z) < 3).FirstOrDefault();
+                return NearbyPeds().Where(p => !dealers.Contains(p) && p.IsOnFoot && dealers.Any(x => p.DistanceTo2D(x) <= 10f) && dealers.Any(x => Math.Abs(x.Position.Z - p.Position.Z) < 3f)).ToList();
+            }
+
+            void FindEventPedPair()
+            {
+                // If driver is within 20f of any ped from victims, assign driver and that victim ped as event peds
+                var dealer = dealers.FirstOrDefault(x => buyers.Any(y => y.DistanceTo2D(x) <= 10f));
+                if (!dealer)
+                {
+                    Game.LogTrivial($"[RPE Ambient Event]: No dealers found with a suitable buyer nearby.");
+                    @event.Cleanup();
+                    return;
+                }
+                var buyer = buyers.FirstOrDefault(x => x.DistanceTo2D(dealer) <= 10f);
                 if (!buyer)
                 {
-                    Game.LogTrivial($"[RPE Ambient Event] Buyer returned null.  Ending event.");
-                    return null;
+                    Game.LogTrivial($"[RPE Ambient Event]: No buyer found within range of the dealer.");
+                    @event.Cleanup();
+                    return;
                 }
-                else
-                {
-                    return new EventPed(@event, buyer, Role.SecondarySuspect);
-                }
+
+                new EventPed(@event, dealer, Role.PrimarySuspect, true);
+                new EventPed(@event, buyer, Role.SecondarySuspect, false);
             }
         }
 
-        private static void DrugDealFootInteraction(AmbientEvent @event)
+        private static void EventProcess(AmbientEvent @event)
         {
             var dealer = @event.EventPeds.Where(x => x.Role == Role.PrimarySuspect).FirstOrDefault();
             var buyer = @event.EventPeds.Where(x => x.Role == Role.SecondarySuspect).FirstOrDefault();
-            Game.LogTrivial($"[RPE Ambient Event] Running DrugDeal interaction.");
+            Game.LogTrivial($"[RPE Ambient Event]: Running DrugDeal interaction.");
 
             if(!dealer.Ped || !buyer.Ped)
             {
-                Game.LogTrivial($"[RPE Ambient Event] Dealer or buyer is null.  Ending event.");
+                Game.LogTrivial($"[RPE Ambient Event]: Dealer or buyer is null.  Ending event.");
+                @event.Cleanup();
                 return;
             }
 
             // Dealer faces buyer, plays speech, waves
             Rage.Native.NativeFunction.Natives.TASK_TURN_PED_TO_FACE_ENTITY(dealer.Ped, buyer.Ped, -1);
-            PlayDealerQueueSpeech();
+            PlayDealerCueSpeech();
             dealer.Ped.Tasks.PlayAnimation("friends@frj@ig_1", "wave_c", 1, AnimationFlags.None);
 
             //Make buyer walk to dealer
@@ -95,40 +116,9 @@ namespace RichsPoliceEnhancements
             Rage.Native.NativeFunction.Natives.TASK_TURN_PED_TO_FACE_ENTITY(buyer.Ped, dealer.Ped, -1);
 
             PlayInteractionAudioAndAnimation();
-
-            Game.LogTrivial($"[RPE Ambient Event]: In the wander/pursuit loop");
-            while (true)
-            {
-                if(!dealer.Ped || !buyer.Ped)
-                {
-                    Game.LogTrivial($"[RPE Ambient Event]: Dealer or buyer is null.  Ending event.");
-                    return;
-                }
-
-                if(Game.LocalPlayer.Character.DistanceTo2D(dealer.Ped) > 150f)
-                {
-                    Game.LogTrivial($"[RPE Ambient Event]: Player is too far away.  Ending event.");
-                    @event.Cleanup();
-                    return;
-                }
-
-                if (Game.LocalPlayer.Character.DistanceTo2D(dealer.Ped.Position) < 10f)
-                {
-                    if (new Random().Next(10) % 2 == 0)
-                    {
-                        MakePedsWander();
-                        break;
-                    }
-                    else
-                    {
-                        StartPursuit();
-                        break;
-                    }
-                }
-                GameFiber.Yield();
-            }
-
-            void PlayDealerQueueSpeech()
+            EndEvent(@event);
+            
+            void PlayDealerCueSpeech()
             {
                 if (dealer.Ped.RelationshipGroup.Name == "AMBIENT_GANG_BALLAS" || dealer.Ped.RelationshipGroup.Name == "AMBIENT_GANG_FAMILY")
                 {
@@ -157,6 +147,58 @@ namespace RichsPoliceEnhancements
                 //BuyerBlip.Scale = 0.75f;
                 //BuyerBlip.Color = Color.White;
             }
+        }
+
+        private static void EndEvent(AmbientEvent @event)
+        {
+            var dealer = @event.EventPeds.FirstOrDefault(x => x.Role == Role.PrimarySuspect);
+            var buyer = @event.EventPeds.FirstOrDefault(x => x.Role == Role.SecondarySuspect);
+            var pedsWandering = false;
+            var oldDistance = Game.LocalPlayer.Character.DistanceTo2D(dealer.Ped);
+
+            Game.LogTrivial($"[RPE Ambient Event]: In the wander/pursuit loop");
+            while (true)
+            {
+                if (!dealer.Ped || !buyer.Ped)
+                {
+                    Game.LogTrivial($"[RPE Ambient Event]: Dealer or buyer is null.  Ending event.");
+                    @event.Cleanup();
+                    return;
+                }
+
+                if (Game.LocalPlayer.Character.DistanceTo2D(dealer.Ped) > 150f)
+                {
+                    Game.LogTrivial($"[RPE Ambient Event]: Player is too far away.  Ending event.");
+                    @event.Cleanup();
+                    return;
+                }
+
+                if (Game.LocalPlayer.Character.DistanceTo2D(dealer.Ped.Position) < 10f && !pedsWandering)
+                {
+                    Game.LogTrivial($"[RPE Ambient Event]: Player is triggering ped response.  Resetting event.");
+                    if (new Random().Next(10) % 2 == 0)
+                    {
+                        MakePedsWander();
+                        pedsWandering = true;
+                    }
+                    else
+                    {
+                        StartPursuit();
+                        break;
+                    }
+                }
+
+                if (Math.Abs(Game.LocalPlayer.Character.DistanceTo2D(dealer.Ped) - oldDistance) > 0.15 && Game.LocalPlayer.Character.DistanceTo2D(dealer.Ped) > oldDistance && dealer.Blip.Alpha > 0f)
+                {
+                    dealer.Blip.Alpha -= 0.001f;
+                }
+                else if (Math.Abs(Game.LocalPlayer.Character.DistanceTo2D(dealer.Ped) - oldDistance) > 0.15 && Game.LocalPlayer.Character.DistanceTo2D(dealer.Ped) < oldDistance && dealer.Blip.Alpha < 1.0f)
+                {
+                    dealer.Blip.Alpha += 0.01f;
+                }
+                oldDistance = Game.LocalPlayer.Character.DistanceTo2D(dealer.Ped);
+                GameFiber.Yield();
+            }
 
             void MakePedsWander()
             {
@@ -170,11 +212,26 @@ namespace RichsPoliceEnhancements
                 {
                     buyer.Ped.Tasks.Wander();
                 }
+
+                // Fade blip
+                foreach (Blip blip in @event.EventBlips.Where(b => b))
+                {
+                    while (blip && blip.Alpha > 0)
+                    {
+                        blip.Alpha -= 0.01f;
+                        GameFiber.Yield();
+                    }
+                    if (blip)
+                    {
+                        blip.Delete();
+                    }
+                }
+                @event.Cleanup();
             }
 
             void StartPursuit()
             {
-                foreach(Blip blip in @event.EventBlips)
+                foreach (Blip blip in @event.EventBlips)
                 {
                     blip.Delete();
                 }
@@ -184,6 +241,7 @@ namespace RichsPoliceEnhancements
                 Functions.AddPedToPursuit(pursuit, dealer.Ped);
                 Functions.SetPursuitIsActiveForPlayer(pursuit, true);
                 Game.LogTrivial($"[RPE Ambient Event]: Pursuit initiated successfully");
+                @event.Cleanup();
             }
         }
     }

@@ -1,15 +1,18 @@
 ﻿using System.Collections.Generic;
 using Rage;
 using System.Linq;
+using System;
+using RichsPoliceEnhancements.Features;
 
 namespace RichsPoliceEnhancements
 {
     internal enum EventType
     {
-        DrugDeal = 0,
-        DriveBy = 1,
-        CarJacking = 2,
-        Assault = 4,
+        None = 0,
+        DrugDeal = 1, // Implemented
+        DriveBy = 2, // Implemented
+        CarJacking = 3, // Implemented
+        Assault = 4, // Implemented
         RoadRage = 5,
         PublicIntoxication = 6,
         DUI = 7,
@@ -19,7 +22,10 @@ namespace RichsPoliceEnhancements
         CriminalMischief = 11,
         OfficerAmbush = 12,
         CitizenAssist = 13,
-        MentalHealth = 14
+        MentalHealth = 14,
+        TrafficStopAssist = 15,
+        OpenCarry = 16,
+        CarVsAnimal = 17
     }
 
     internal class AmbientEvent
@@ -31,6 +37,7 @@ namespace RichsPoliceEnhancements
 
         internal AmbientEvent(EventType eventType)
         {
+            AppDomain.CurrentDomain.DomainUnload += TerminationHandler;
             EventType = eventType;
             RunEventFunctions(eventType);
         }
@@ -42,13 +49,22 @@ namespace RichsPoliceEnhancements
                 case EventType.DrugDeal:
                     DrugDealEventFunctions.BeginEvent(this);
                     break;
+                case EventType.DriveBy:
+                    DriveByEventFunctions.BeginEvent(this);
+                    break;
+                case EventType.CarJacking:
+                    CarJackingEventFunctions.BeginEvent(this);
+                    break;
+                case EventType.Assault:
+                    AssaultEventFunctions.BeginEvent(this);
+                    break;
             }
         }
 
         internal void Cleanup()
         {
             // Clean up EventBlips
-            foreach (Blip blip in EventBlips)
+            foreach (Blip blip in EventBlips.Where(b => b))
             {
                 blip.Delete();
             }
@@ -57,7 +73,7 @@ namespace RichsPoliceEnhancements
             // Clean up EventPeds
             foreach (EventPed EP in EventPeds.Where(x => x.Ped))
             {
-                foreach (Blip blip in EP.Ped.GetAttachedBlips())
+                foreach (Blip blip in EP.Ped.GetAttachedBlips().Where(b => b))
                 {
                     blip.Delete();
                 }
@@ -68,10 +84,19 @@ namespace RichsPoliceEnhancements
 
             // Clean up EventVehicles
             //foreach (EventVehicle vehicle in EventVehicles.Where(x => x.))
-            
+
             //    vehicle.IsPersistent = false;
             //}
             //EventVehicles.Clear();
+
+            AmbientEvents.SetEventActiveFalse();
+            AppDomain.CurrentDomain.DomainUnload -= TerminationHandler;
+        }
+
+        private void TerminationHandler(object sender, EventArgs e)
+        {
+            Cleanup();
+            Game.LogTrivial("[RPE Ambient Event]: Plugin terminated.");
         }
     }
 }
