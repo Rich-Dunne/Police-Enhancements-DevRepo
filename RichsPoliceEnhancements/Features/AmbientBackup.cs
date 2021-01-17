@@ -73,6 +73,7 @@ namespace RichsPoliceEnhancements.Features
         private static void Events_OnCalloutAccepted(LHandle handle)
         {
             Game.LogTrivial($"[RPE Ambient Backup]: Callout accepted");
+            BackupOffered = false;
             LHandle pursuit = null;
             CheckForActivePursuit();
             if (pursuit != null && !BackupOffered)
