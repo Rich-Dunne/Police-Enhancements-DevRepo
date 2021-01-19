@@ -7,6 +7,7 @@ namespace RichsPoliceEnhancements
     {
         // Feature Settings
         internal static bool EnableAmbientBackup { get; private set; } = false;
+        internal static bool AlwaysAcceptAmbientBackup { get; private set; } = false;
         internal static bool EnableAISirenCycle { get; private set; } = false;
         internal static bool EnableSilentBackup { get; private set; } = false;
         internal static bool EnableTVI { get; private set; } = false;
@@ -35,6 +36,7 @@ namespace RichsPoliceEnhancements
         // PRT Settings
         internal static int PRTToneTimer { get; private set; } = 15;
         internal static bool AutomaticPRT { get; private set; } = false;
+        internal static bool DisablePRTNotifications { get; private set; } = false;
 
         // Pursuit Update Settings
         internal static int PursuitUpdateTimer { get; private set; } = 20;
@@ -50,6 +52,7 @@ namespace RichsPoliceEnhancements
 
             // Feature settings
             EnableAmbientBackup = ini.ReadBoolean("Features", "EnableAmbientBackup", false);
+            AlwaysAcceptAmbientBackup = ini.ReadBoolean("Features", "AmbientBackupAlwaysYes", false);
             EnableAISirenCycle = ini.ReadBoolean("Features", "EnableAISirenCycle", false);
             EnableSilentBackup = ini.ReadBoolean("Features", "EnableSilentBackup", false);
             EnableTVI = ini.ReadBoolean("Features", "EnableTVI", false);
@@ -84,6 +87,7 @@ namespace RichsPoliceEnhancements
             // PRT Settings
             PRTToneTimer = ini.ReadInt32("Priority Radio Traffic Settings", "PRTToneTimer", 15);
             AutomaticPRT = ini.ReadBoolean("Priority Radio Traffic Settings", "AutomaticPRT", false);
+            DisablePRTNotifications = ini.ReadBoolean("Priority Radio Traffic Settings", "DisablePRTNotifications", false);
 
             // Pursuit Update Settings
             PursuitUpdateTimer = ini.ReadInt32("Pursuit Update Settings", "PursuitUpdateTimer", 20);
