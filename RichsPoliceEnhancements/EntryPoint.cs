@@ -44,8 +44,7 @@ namespace RichsPoliceEnhancements
             if (Settings.EnableAmbientEvents)
             {
                 Game.LogTrivial("[RPE]: AmbientEvents are enabled.");
-                GameFiber AmbientEventsFiber = new GameFiber(() => AmbientEvents.Main(), "RPE Ambient Event Main Fiber");
-                AmbientEventsFiber.Start();
+                GameFiber.StartNew(() => AmbientEvents.Main(), "RPE Ambient Event Main Fiber");
             }
             else
             {
@@ -55,8 +54,7 @@ namespace RichsPoliceEnhancements
             if (Settings.EnableAmbientBackup)
             {
                 Game.LogTrivial("[RPE]: AmbientBackup is enabled.");
-                GameFiber AmbientBackupFiber = new GameFiber(() => AmbientBackup.Main(), "RPE Ambient Backup Fiber");
-                AmbientBackupFiber.Start();
+                GameFiber.StartNew(() => AmbientBackup.Main(), "RPE Ambient Backup Fiber");
             }
             else
             {
@@ -66,8 +64,7 @@ namespace RichsPoliceEnhancements
             if (Settings.EnableAISirenCycle)
             {
                 Game.LogTrivial("[RPE]: AISirenCycle is enabled.");
-                GameFiber SirenCycleFiber = new GameFiber(() => AISirenCycle.Main(), "RPE Siren Cycle Fiber");
-                SirenCycleFiber.Start();
+                GameFiber.StartNew(() => AISirenCycle.Main(), "RPE Siren Cycle Fiber");
             }
             else
             {
@@ -77,8 +74,7 @@ namespace RichsPoliceEnhancements
             if (Settings.EnableSilentBackup)
             {
                 Game.LogTrivial("[RPE]: SilentBackup is enabled.");
-                GameFiber SilentBackupFiber = new GameFiber(() => SilentBackup.Main(), "RPE Silent Backup Fiber");
-                SilentBackupFiber.Start();
+                GameFiber.StartNew(() => SilentBackup.Main(), "RPE Silent Backup Fiber");
             }
             else
             {
@@ -88,8 +84,7 @@ namespace RichsPoliceEnhancements
             if (Settings.EnableTVI)
             {
                 Game.LogTrivial("[RPE]: TVI is enabled.");
-                GameFiber TVIFiber = new GameFiber(() => TVI.Main(), "RPE TVI Fiber");
-                TVIFiber.Start();
+                GameFiber.StartNew(() => TVI.Main(), "RPE TVI Fiber");
             }
             else
             {
@@ -99,8 +94,7 @@ namespace RichsPoliceEnhancements
             if (Settings.EnableBOLO)
             {
                 Game.LogTrivial("[RPE]: BOLO is enabled.");
-                GameFiber BOLOFiber = new GameFiber(() => BOLO.Main(), "RPE BOLO Fiber");
-                BOLOFiber.Start();
+                GameFiber.StartNew(() => BOLO.Main(), "RPE BOLO Fiber");
             }
             else
             {
@@ -110,8 +104,7 @@ namespace RichsPoliceEnhancements
             if (Settings.EnablePRT)
             {
                 Game.LogTrivial("[RPE]: PriorityRadioTraffic is enabled.");
-                GameFiber PRTFiber = new GameFiber(() => PriorityRadioTraffic.Main(DependencyChecker.DoesPluginExist("PoliceSmartRadio.dll"), DependencyChecker.DoesPluginExist("VocalDispatch.dll"), DependencyChecker.DoesPluginExist("GrammarPolice.dll")), "RPE Priority Radio Traffic Fiber");
-                PRTFiber.Start();
+                GameFiber.StartNew(() => PriorityRadioTraffic.Main(DependencyChecker.DoesPluginExist("PoliceSmartRadio.dll"), DependencyChecker.DoesPluginExist("VocalDispatch.dll"), DependencyChecker.DoesPluginExist("GrammarPolice.dll")), "RPE Priority Radio Traffic Fiber");
             }
             else
             {
@@ -131,8 +124,7 @@ namespace RichsPoliceEnhancements
             if (Settings.EnableSuspectStamina)
             {
                 Game.LogTrivial("[RPE]: SuspectStamina is enabled.");
-                GameFiber SuspectStaminaFiber = new GameFiber(() => SuspectStamina.Main(), "RPE Suspect Stamina Fiber");
-                SuspectStaminaFiber.Start();
+                GameFiber.StartNew(() => SuspectStamina.Main(), "RPE Suspect Stamina Fiber");
             }
             else
             {
