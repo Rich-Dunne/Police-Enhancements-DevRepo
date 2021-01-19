@@ -28,15 +28,28 @@ namespace RichsPoliceEnhancements.Features
                 CheckForActivePursuit();
                 if (pursuit != null && !BackupOffered)
                 {
-
-                    PromptForAmbientBackup(Incident.Pursuit);
+                    if (Settings.AlwaysAcceptAmbientBackup)
+                    {
+                        CheckForAmbientUnits(Incident.Pursuit);
+                    }
+                    else
+                    {
+                        PromptForAmbientBackup(Incident.Pursuit);
+                    }
                     continue;
                 }
 
                 CheckForActiveTrafficStop();
                 if (trafficStop != null && !BackupOffered)
                 {
-                    PromptForAmbientBackup(Incident.TrafficStop);
+                    if (Settings.AlwaysAcceptAmbientBackup)
+                    {
+                        CheckForAmbientUnits(Incident.TrafficStop);
+                    }
+                    else
+                    {
+                        PromptForAmbientBackup(Incident.TrafficStop);
+                    }
                 }
 
                 GameFiber.Sleep(100);
