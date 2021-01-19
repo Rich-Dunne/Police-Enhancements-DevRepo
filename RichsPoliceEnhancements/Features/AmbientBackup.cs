@@ -3,6 +3,7 @@ using LSPD_First_Response.Mod.API;
 using System.Linq;
 using System.Windows.Forms;
 using System;
+using RichsPoliceEnhancements.Utils;
 
 namespace RichsPoliceEnhancements.Features
 {
@@ -163,7 +164,7 @@ namespace RichsPoliceEnhancements.Features
 
             Vehicle GetNearbyPoliceVehicleWithDriver()
             {
-                foreach (Vehicle vehicle in Game.LocalPlayer.Character.GetNearbyVehicles(16).Where(v => v && v.IsPoliceVehicle && v != Game.LocalPlayer.Character.LastVehicle && v.HasDriver && v.Driver.IsAlive && !Functions.IsPedInPursuit(v.Driver)))
+                foreach (Vehicle vehicle in Game.LocalPlayer.Character.GetNearbyVehicles(16).Where(v => v && v.IsPoliceVehicle && v != Game.LocalPlayer.Character.LastVehicle && v.HasDriver && v.Driver.IsAlive && v.Driver.IsAmbient() && !Functions.IsPedInPursuit(v.Driver)))
                 {
                     return vehicle;
                 }
