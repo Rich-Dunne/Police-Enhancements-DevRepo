@@ -7,7 +7,6 @@ namespace RichsPoliceEnhancements
     {
         // Feature Settings
         internal static bool EnableAmbientBackup { get; private set; } = false;
-        internal static bool AlwaysAcceptAmbientBackup { get; private set; } = false;
         internal static bool EnableAISirenCycle { get; private set; } = false;
         internal static bool EnableSilentBackup { get; private set; } = false;
         internal static bool EnableTVI { get; private set; } = false;
@@ -43,6 +42,13 @@ namespace RichsPoliceEnhancements
         internal static int PursuitUpdateTimer { get; private set; } = 20;
         internal static bool DispatchUpdates { get; private set; } = false;
         internal static bool DisableNotifications { get; private set; } = false;
+
+        // Ambient Backup Settings
+        internal static bool AlwaysAcceptAmbientBackup { get; private set; } = false;
+
+        // Suspect Stamina Settings
+        internal static bool CanTripDuringFootPursuit { get; private set; } = false;
+        internal static int TripChance { get; private set; } = 1;
 
         internal static readonly InitializationFile ini = new InitializationFile("Plugins/LSPDFR/RichsPoliceEnhancements.ini");
 
@@ -98,6 +104,10 @@ namespace RichsPoliceEnhancements
 
             // Ambient Backup Settings
             AlwaysAcceptAmbientBackup = ini.ReadBoolean("Ambient Backup Settings", "AlwaysAcceptAmbientBackup", false);
+
+            // Suspect Stamina Settings
+            CanTripDuringFootPursuit = ini.ReadBoolean("Suspect Stamina", "CanTripDuringPursuit", false);
+            TripChance = ini.ReadInt32("Suspect Stamina", "TripChance", 1);
         }
     }
 }

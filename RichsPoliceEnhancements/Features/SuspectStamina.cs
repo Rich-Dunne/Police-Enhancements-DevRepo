@@ -28,6 +28,7 @@ namespace RichsPoliceEnhancements.Features
                     Game.LogTrivial($"[RPE Suspect Stamina]: Assigning active pursuit to pursuit handle.");
                     pursuit = Functions.GetActivePursuit();
                     pursuitPeds = GetPursuitPeds();
+                    pursuitPeds.Remove(Game.LocalPlayer.Character);
                     AssignStamina(pursuitPeds);
                 }
 
@@ -43,7 +44,7 @@ namespace RichsPoliceEnhancements.Features
             }
         }
 
-        private static List<Ped> GetPursuitPeds() => Functions.GetPursuitPeds(Functions.GetActivePursuit()).Where(x => x && x.IsAlive && x != Game.LocalPlayer.Character && !x.RelationshipGroup.Name.ToLower().Contains("cop") && !x.Model.Name.Contains("COP")).ToList();
+        private static List<Ped> GetPursuitPeds() => Functions.GetPursuitPeds(Functions.GetActivePursuit()).Where(x => x && x.IsAlive && x != Game.LocalPlayer.Character && !Functions.IsPedACop(x)).ToList();
 
         private static void AssignStamina(List<Ped> pursuitPeds)
         {
@@ -88,10 +89,14 @@ namespace RichsPoliceEnhancements.Features
                 else if (ped.Metadata.Stamina <= 25)
                 {
                     AdjustPedSpeed(ped, 3f);
-                    TryToTripPed(ped);
 
                     // Chance to stop and catch breath
                     // move_injured_generic runtowalk
+                }
+
+                if (Settings.CanTripDuringFootPursuit)
+                {
+                    TryToTripPed(ped);
                 }
             }
         }
@@ -104,7 +109,7 @@ namespace RichsPoliceEnhancements.Features
 
         private static void TryToTripPed(Ped ped)
         {
-            if (new Random().Next(100) == 1)
+            if (new Random().Next(100) <= Settings.TripChance)
             {
                 Game.LogTrivial($"[RPE Suspect Stamina]: Suspect tripped");
                 ped.IsRagdoll = true;
