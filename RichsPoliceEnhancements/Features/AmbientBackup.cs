@@ -20,14 +20,17 @@ namespace RichsPoliceEnhancements.Features
 
         internal static void Main()
         {
-            LHandle pursuit = null;
-            LHandle trafficStop = null;
             Events.OnCalloutAccepted += Events_OnCalloutAccepted;
 
             while (true)
             {
-                CheckForActivePursuit();
-                if (pursuit != null && !BackupOffered)
+                GameFiber.Yield();
+                if (Functions.GetCurrentPullover() == null && Functions.GetActivePursuit() == null)
+                {
+                    BackupOffered = false;
+                }
+
+                if (Functions.GetActivePursuit() != null && !BackupOffered)
                 {
                     if (Settings.AlwaysAcceptAmbientBackup)
                     {
@@ -40,8 +43,7 @@ namespace RichsPoliceEnhancements.Features
                     continue;
                 }
 
-                CheckForActiveTrafficStop();
-                if (trafficStop != null && !BackupOffered)
+                if (Functions.GetCurrentPullover() != null && !BackupOffered)
                 {
                     if (Settings.AlwaysAcceptAmbientBackup)
                     {
@@ -55,55 +57,22 @@ namespace RichsPoliceEnhancements.Features
 
                 GameFiber.Sleep(100);
             }
-
-            void CheckForActivePursuit()
-            {
-                if (Functions.GetActivePursuit() != null && pursuit == null)
-                {
-                    pursuit = Functions.GetActivePursuit();
-                }
-                else if (pursuit != null && Functions.GetActivePursuit() == null)
-                {
-                    pursuit = null;
-                    BackupOffered = false;
-                }
-            }
-
-            void CheckForActiveTrafficStop()
-            {
-
-                if (Functions.GetCurrentPullover() != null && trafficStop == null)
-                {
-                    trafficStop = Functions.GetCurrentPullover();
-                }
-                else if (trafficStop != null && Functions.GetCurrentPullover() == null)
-                {
-                    trafficStop = null;
-                    BackupOffered = false;
-                }
-            }
         }
 
         private static void Events_OnCalloutAccepted(LHandle handle)
         {
             Game.LogTrivial($"[RPE Ambient Backup]: Callout accepted");
-            LHandle pursuit = null;
-            CheckForActivePursuit();
-            if (pursuit != null && !BackupOffered)
-            {
-                PromptForAmbientBackup(Incident.Pursuit);
-            }
 
-            void CheckForActivePursuit()
+            if (Functions.GetActivePursuit() != null && !BackupOffered)
             {
-                if (Functions.GetActivePursuit() != null && pursuit == null)
+                if (Settings.AlwaysAcceptAmbientBackup)
                 {
-                    pursuit = Functions.GetActivePursuit();
+                    Game.LogTrivial($"[RPE Ambient Backup]: Always accept ambient backup.");
+                    CheckForAmbientUnits(Incident.Pursuit);
                 }
-                else if (pursuit != null && Functions.GetActivePursuit() == null)
+                else
                 {
-                    pursuit = null;
-                    BackupOffered = false;
+                    PromptForAmbientBackup(Incident.Pursuit);
                 }
             }
         }
