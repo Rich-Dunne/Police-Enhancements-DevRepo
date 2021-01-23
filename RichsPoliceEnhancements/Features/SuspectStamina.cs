@@ -43,7 +43,7 @@ namespace RichsPoliceEnhancements.Features
             }
         }
 
-        private static List<Ped> GetPursuitPeds() => Functions.GetPursuitPeds(Functions.GetActivePursuit()).ToList();
+        private static List<Ped> GetPursuitPeds() => Functions.GetPursuitPeds(Functions.GetActivePursuit()).Where(x => x && x.IsAlive && x != Game.LocalPlayer.Character && !x.RelationshipGroup.Name.ToLower().Contains("cop") && !x.Model.Name.Contains("COP")).ToList();
 
         private static void AssignStamina(List<Ped> pursuitPeds)
         {
