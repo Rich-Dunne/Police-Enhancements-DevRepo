@@ -122,13 +122,13 @@ namespace RichsPoliceEnhancements.Features
                 {
                     Game.DisplayNotification($"~y~~h~DISPATCH - PRIORITY RADIO TRAFFIC ALERT~h~\n~s~~w~All units ~r~clear this channel~w~ for priority radio traffic.");
                 }
-                LSPD_First_Response.Mod.API.Functions.PlayScannerAudio($"ATTENTION_THIS_IS_DISPATCH WE_ARE_CODE_4");
+                LSPD_First_Response.Mod.API.Functions.PlayScannerAudio($"ATTENTION_THIS_IS_DISPATCH");
                 GameFiber.Sleep(3000);
                 AudioLoop();
             }
             else
             {
-                LSPD_First_Response.Mod.API.Functions.PlayScannerAudio($"ATTENTION_THIS_IS_DISPATCH");
+                LSPD_First_Response.Mod.API.Functions.PlayScannerAudio($"ATTENTION_THIS_IS_DISPATCH WE_ARE_CODE_4");
                 if (!Settings.DisablePRTNotifications)
                 {
                     Game.DisplayNotification($"~y~~h~DISPATCH - PRIORITY RADIO TRAFFIC ALERT~h~\n~s~~w~All units be advised, priority radio traffic has been canceled.  This channel is now ~g~open~w~.");
