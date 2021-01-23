@@ -30,6 +30,7 @@ namespace RichsPoliceEnhancements
         internal static string DriveByFrequency { get; private set; } = "off";
 
         // BOLO Settings
+        internal static bool EnableBOLOStartBlip { get; private set; } = false;
         internal static int BOLOTimer { get; private set; } = 10;
         internal static int BOLOFrequency { get; private set; } = 5;
 
@@ -52,7 +53,6 @@ namespace RichsPoliceEnhancements
 
             // Feature settings
             EnableAmbientBackup = ini.ReadBoolean("Features", "EnableAmbientBackup", false);
-            AlwaysAcceptAmbientBackup = ini.ReadBoolean("Features", "AmbientBackupAlwaysYes", false);
             EnableAISirenCycle = ini.ReadBoolean("Features", "EnableAISirenCycle", false);
             EnableSilentBackup = ini.ReadBoolean("Features", "EnableSilentBackup", false);
             EnableTVI = ini.ReadBoolean("Features", "EnableTVI", false);
@@ -79,6 +79,7 @@ namespace RichsPoliceEnhancements
             EventFrequencies.Add("DriveBy", DriveByFrequency);
 
             // BOLO Settings
+            EnableBOLOStartBlip = ini.ReadBoolean("BOLO Settings", "EnableBOLOStartBlip", false);
             BOLOTimer = ini.ReadInt32("BOLO Settings", "BOLOTimer", 10);
             BOLOTimer *= 60000;
             BOLOFrequency = ini.ReadInt32("BOLO Settings", "BOLOFrequency", 5);
@@ -94,6 +95,9 @@ namespace RichsPoliceEnhancements
             PursuitUpdateTimer *= 1000;
             DispatchUpdates = ini.ReadBoolean("Pursuit Update Settings", "DispatchUpdates", false);
             DisableNotifications = ini.ReadBoolean("Pursuit Update Settings", "DisableNotifications", false);
+
+            // Ambient Backup Settings
+            AlwaysAcceptAmbientBackup = ini.ReadBoolean("Ambient Backup Settings", "AlwaysAcceptAmbientBackup", false);
         }
     }
 }
