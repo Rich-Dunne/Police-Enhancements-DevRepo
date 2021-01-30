@@ -124,7 +124,7 @@ namespace RichsPoliceEnhancements
 
             while (true)
             {
-                if (!suspect.Ped || !victim.Ped || !suspect.Ped.IsAlive || !victim.Ped.IsAlive || Functions.IsPedGettingArrested(suspect.Ped))
+                if (suspect == null || victim == null || !suspect.Ped || !victim.Ped || !suspect.Ped.IsAlive || !victim.Ped.IsAlive || Functions.IsPedGettingArrested(suspect.Ped))
                 {
                     Game.LogTrivial($"[RPE Ambient Event]: Suspect or victim is null or dead, or driver is arrested.  Ending event.");
                     @event.Cleanup();
@@ -152,15 +152,18 @@ namespace RichsPoliceEnhancements
                     return;
                 }
 
-                if (Math.Abs(Game.LocalPlayer.Character.DistanceTo2D(suspect.Ped) - oldDistance) > 0.15 && Game.LocalPlayer.Character.DistanceTo2D(suspect.Ped) > oldDistance && suspect.Blip.Alpha > 0f)
+                if(Settings.EventBlips && suspect.Blip)
                 {
-                    suspect.Blip.Alpha -= 0.001f;
+                    if (Math.Abs(Game.LocalPlayer.Character.DistanceTo2D(suspect.Ped) - oldDistance) > 0.15 && Game.LocalPlayer.Character.DistanceTo2D(suspect.Ped) > oldDistance && suspect.Blip.Alpha > 0f)
+                    {
+                        suspect.Blip.Alpha -= 0.001f;
+                    }
+                    else if (Math.Abs(Game.LocalPlayer.Character.DistanceTo2D(suspect.Ped) - oldDistance) > 0.15 && Game.LocalPlayer.Character.DistanceTo2D(suspect.Ped) < oldDistance && suspect.Blip.Alpha < 1.0f)
+                    {
+                        suspect.Blip.Alpha += 0.01f;
+                    }
+                    oldDistance = Game.LocalPlayer.Character.DistanceTo2D(suspect.Ped);
                 }
-                else if (Math.Abs(Game.LocalPlayer.Character.DistanceTo2D(suspect.Ped) - oldDistance) > 0.15 && Game.LocalPlayer.Character.DistanceTo2D(suspect.Ped) < oldDistance && suspect.Blip.Alpha < 1.0f)
-                {
-                    suspect.Blip.Alpha += 0.01f;
-                }
-                oldDistance = Game.LocalPlayer.Character.DistanceTo2D(suspect.Ped);
 
                 GameFiber.Yield();
             }

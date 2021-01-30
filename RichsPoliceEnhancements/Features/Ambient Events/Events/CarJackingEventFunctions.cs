@@ -109,7 +109,6 @@ namespace RichsPoliceEnhancements
                 return;
             }
 
-            //jacker.Blip.Alpha = 0;
             jacker.Ped.Tasks.Clear();
             jacker.Ped.Tasks.EnterVehicle(victim.Ped.CurrentVehicle, -1, -1, 5f, EnterVehicleFlags.AllowJacking).WaitForCompletion();
 
@@ -121,7 +120,10 @@ namespace RichsPoliceEnhancements
                 GameFiber.Yield();
             }
 
-            jacker.Blip.Alpha = 100;
+            if(Settings.EventBlips && jacker.Blip)
+            {
+                jacker.Blip.Alpha = 100;
+            }
             Game.LogTrivial($"[RPE Ambient Event]: Jacker is in the vehicle and driving away.");
             jacker.Ped.Tasks.CruiseWithVehicle(30f, VehicleDrivingFlags.Emergency);
             EndEvent(@event);
@@ -193,15 +195,19 @@ namespace RichsPoliceEnhancements
                     return;
                 }
 
-                if (Math.Abs(Game.LocalPlayer.Character.DistanceTo2D(jacker.Ped) - oldDistance) > 0.15 && Game.LocalPlayer.Character.DistanceTo2D(jacker.Ped) > oldDistance && jacker.Blip.Alpha > 0f)
+                if(Settings.EventBlips && jacker.Blip)
                 {
-                    jacker.Blip.Alpha -= 0.001f;
+                    if (Math.Abs(Game.LocalPlayer.Character.DistanceTo2D(jacker.Ped) - oldDistance) > 0.15 && Game.LocalPlayer.Character.DistanceTo2D(jacker.Ped) > oldDistance && jacker.Blip.Alpha > 0f)
+                    {
+                        jacker.Blip.Alpha -= 0.001f;
+                    }
+                    else if (Math.Abs(Game.LocalPlayer.Character.DistanceTo2D(jacker.Ped) - oldDistance) > 0.15 && Game.LocalPlayer.Character.DistanceTo2D(jacker.Ped) < oldDistance && jacker.Blip.Alpha < 1.0f)
+                    {
+                        jacker.Blip.Alpha += 0.01f;
+                    }
+                    oldDistance = Game.LocalPlayer.Character.DistanceTo2D(jacker.Ped);
                 }
-                else if (Math.Abs(Game.LocalPlayer.Character.DistanceTo2D(jacker.Ped) - oldDistance) > 0.15 && Game.LocalPlayer.Character.DistanceTo2D(jacker.Ped) < oldDistance && jacker.Blip.Alpha < 1.0f)
-                {
-                    jacker.Blip.Alpha += 0.01f;
-                }
-                oldDistance = Game.LocalPlayer.Character.DistanceTo2D(jacker.Ped);
+
                 GameFiber.Yield();
             }
         }
