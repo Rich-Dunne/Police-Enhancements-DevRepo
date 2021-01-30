@@ -243,7 +243,7 @@ namespace RichsPoliceEnhancements.Features
             {
                 var boloVehiclesList = new List<Vehicle>();
                 var pulloverVehicle = GetPulloverVehicle();
-                var potentialBOLOVehicles = World.GetAllVehicles().Where(x => x && x.IsCar && !x.IsPoliceVehicle && !x.HasSiren && !x.HasTowArm && x != Game.LocalPlayer.Character.CurrentVehicle && x != Game.LocalPlayer.Character.LastVehicle && x.HasDriver && x.Driver.IsAlive && x != pulloverVehicle);
+                var potentialBOLOVehicles = World.GetAllVehicles().Where(x => x && x.IsCar && !x.IsPoliceVehicle && !x.HasSiren && !x.HasTowArm && x != Game.LocalPlayer.Character.CurrentVehicle && x != Game.LocalPlayer.Character.LastVehicle && x.HasDriver && x.Driver.IsAlive && (pulloverVehicle != null && x != pulloverVehicle));
                 
                 foreach (Vehicle vehicle in potentialBOLOVehicles.Where(x => x))
                 {
@@ -303,7 +303,7 @@ namespace RichsPoliceEnhancements.Features
                 GameFiber.Yield();
             }
 
-            if(StartBlip.Alpha < 1)
+            if(StartBlip != null && StartBlip.Alpha < 1)
             {
                 StartBlip.Delete();
                 StartBlip = null;
@@ -389,7 +389,11 @@ namespace RichsPoliceEnhancements.Features
             boloSuspect.IsPersistent = false;
             BOLOActive = false;
             BOLOVehicle = null;
-            StartBlip = null;
+            if(StartBlip != null)
+            {
+                StartBlip.Delete();
+                StartBlip = null;
+            }
         }
 
 
