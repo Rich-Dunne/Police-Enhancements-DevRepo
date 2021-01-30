@@ -76,14 +76,14 @@ namespace RichsPoliceEnhancements
                 var dealer = dealers.FirstOrDefault(x => buyers.Any(y => y.DistanceTo2D(x) <= 10f));
                 if (!dealer)
                 {
-                    Game.LogTrivial($"[RPE Ambient Event]: No dealers found with a suitable buyer nearby.");
+                    //Game.LogTrivial($"[RPE Ambient Event]: No dealers found with a suitable buyer nearby.");
                     @event.Cleanup();
                     return;
                 }
                 var buyer = buyers.FirstOrDefault(x => x.DistanceTo2D(dealer) <= 10f);
                 if (!buyer)
                 {
-                    Game.LogTrivial($"[RPE Ambient Event]: No buyer found within range of the dealer.");
+                    //Game.LogTrivial($"[RPE Ambient Event]: No buyer found within range of the dealer.");
                     @event.Cleanup();
                     return;
                 }

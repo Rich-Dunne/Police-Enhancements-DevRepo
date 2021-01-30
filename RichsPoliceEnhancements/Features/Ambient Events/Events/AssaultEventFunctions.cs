@@ -78,14 +78,14 @@ namespace RichsPoliceEnhancements
                 var suspect = suspects.FirstOrDefault(x => victims.Any(y => y.DistanceTo2D(x) <= 10f));
                 if (!suspect)
                 {
-                    Game.LogTrivial($"[RPE Ambient Event]: No suspects found with a suitable victim nearby.");
+                    //Game.LogTrivial($"[RPE Ambient Event]: No suspects found with a suitable victim nearby.");
                     @event.Cleanup();
                     return;
                 }
                 var victim = victims.FirstOrDefault(x => x != suspect && x.DistanceTo2D(suspect) <= 10f);
                 if (!victim)
                 {
-                    Game.LogTrivial($"[RPE Ambient Event]: No victim found within range of the suspect.");
+                    //Game.LogTrivial($"[RPE Ambient Event]: No victim found within range of the suspect.");
                     @event.Cleanup();
                     return;
                 }

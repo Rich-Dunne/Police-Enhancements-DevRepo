@@ -78,14 +78,14 @@ namespace RichsPoliceEnhancements
                 var jacker = jackers.FirstOrDefault(x => victims.Any(y => y.DistanceTo2D(x) <= 15f));
                 if (!jacker)
                 {
-                    Game.LogTrivial($"[RPE Ambient Event]: No jackers found with a suitable victim nearby.");
+                    //Game.LogTrivial($"[RPE Ambient Event]: No jackers found with a suitable victim nearby.");
                     @event.Cleanup();
                     return;
                 }
                 var victim = victims.FirstOrDefault(x => x.DistanceTo2D(jacker) <= 15f);
                 if (!victim)
                 {
-                    Game.LogTrivial($"[RPE Ambient Event]: No victim found within range of the jacker.");
+                    //Game.LogTrivial($"[RPE Ambient Event]: No victim found within range of the jacker.");
                     @event.Cleanup();
                     return;
                 }
