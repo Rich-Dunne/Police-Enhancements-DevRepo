@@ -96,7 +96,7 @@ namespace RichsPoliceEnhancements.Features
 
                 if (Settings.CanTripDuringFootPursuit)
                 {
-                    TryToTripPed(ped);
+                    GameFiber.StartNew(() => TryToTripPed(ped), "Suspect Trip Fiber");
                 }
             }
         }
@@ -119,6 +119,7 @@ namespace RichsPoliceEnhancements.Features
                     return;
                 }
                 ped.IsRagdoll = false;
+                GameFiber.Sleep(5000);
             }
         }
     }
