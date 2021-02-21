@@ -105,9 +105,9 @@ namespace RichsPoliceEnhancements
             // Ambient Backup Settings
             AlwaysAcceptAmbientBackup = ini.ReadBoolean("Ambient Backup Settings", "AlwaysAcceptAmbientBackup", false);
 
-            // Suspect Stamina Settings
-            CanTripDuringFootPursuit = ini.ReadBoolean("Suspect Stamina", "CanTripDuringPursuit", false);
-            TripChance = ini.ReadInt32("Suspect Stamina", "TripChance", 1);
+            // Suspect Trip Settings
+            CanTripDuringFootPursuit = ini.ReadBoolean("Suspect Trip", "CanTripDuringFootPursuit", false);
+            TripChance = ini.ReadInt32("Suspect Trip", "TripChance", 1);
         }
     }
 }
