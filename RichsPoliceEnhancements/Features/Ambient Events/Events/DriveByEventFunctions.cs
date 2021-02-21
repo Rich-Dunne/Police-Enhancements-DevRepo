@@ -78,14 +78,14 @@ namespace RichsPoliceEnhancements
                 var driver = drivers.FirstOrDefault(x => victims.Any(y => y.DistanceTo2D(x) <= 20f));
                 if (!driver)
                 {
-                    Game.LogTrivial($"[RPE Ambient Event]: No drivers found with a suitable victim nearby.");
+                    //Game.LogTrivial($"[RPE Ambient Event]: No drivers found with a suitable victim nearby.");
                     @event.Cleanup();
                     return;
                 }
                 var victim = victims.FirstOrDefault(x => x.DistanceTo2D(driver) <= 20f);
                 if (!victim)
                 {
-                    Game.LogTrivial($"[RPE Ambient Event]: No victim found within range of the driver.");
+                    //Game.LogTrivial($"[RPE Ambient Event]: No victim found within range of the driver.");
                     @event.Cleanup();
                     return;
                 }

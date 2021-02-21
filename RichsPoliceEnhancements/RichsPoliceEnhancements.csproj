@@ -34,8 +34,9 @@
     <Reference Include="GrammarPolice">
       <HintPath>..\..\..\Core Plugins\Grammar Police\Grand Theft Auto V\plugins\LSPDFR\GrammarPolice.dll</HintPath>
     </Reference>
-    <Reference Include="LSPD First Response">
-      <HintPath>..\..\Modding Resources\References\LSPD First Response.dll</HintPath>
+    <Reference Include="LSPD First Response, Version=0.4.7529.42382, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>D:\Program Files\Rockstar Games\Grand Theft Auto V\plugins\LSPD First Response.dll</HintPath>
     </Reference>
     <Reference Include="PoliceSmartRadio">
       <HintPath>..\..\..\Core Plugins\PoliceSmartRadio 1.2.0.0 by Albo1125 RPH0.51orhigher\API Reference - Developers Only\PoliceSmartRadio.dll</HintPath>
@@ -73,6 +74,7 @@
     <Compile Include="Features\Ambient Events\EventVehicle.cs" />
     <Compile Include="Features\SuspectStamina.cs" />
     <Compile Include="Features\PriorityRadioTraffic.cs" />
+    <Compile Include="Features\SuspectTrip.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -83,6 +85,7 @@
     <Compile Include="Settings.cs" />
     <Compile Include="Features\SilentBackup.cs" />
     <Compile Include="Features\TVI.cs" />
+    <Compile Include="Utils\ConsoleCommands.cs" />
     <Compile Include="Utils\DependencyChecker.cs" />
     <Compile Include="Utils\VocalDispatch\Utilities.cs" />
     <Compile Include="Utils\VocalDispatch\VocalDispatchHelper.cs" />

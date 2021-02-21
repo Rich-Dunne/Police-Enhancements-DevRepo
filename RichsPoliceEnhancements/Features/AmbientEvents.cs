@@ -25,9 +25,6 @@ namespace RichsPoliceEnhancements.Features
             CommonEvents.AddRange(Settings.EventFrequencies.Where(x => x.Value == "common").Select(x => x.Key).ToList());
             UncommonEvents.AddRange(Settings.EventFrequencies.Where(x => x.Value == "uncommon").Select(x => x.Key).ToList());
             RareEvents.AddRange(Settings.EventFrequencies.Where(x => x.Value == "rare").Select(x => x.Key).ToList());
-            //var commonEvents = Settings.EventFrequencies.Where(x => x.Value == "common").Select(x => x.Key).ToList();
-            //var uncommonEvents = Settings.EventFrequencies.Where(x => x.Value == "uncommon").Select(x => x.Key).ToList();
-            //var rareEvents = Settings.EventFrequencies.Where(x => x.Value == "rare").Select(x => x.Key).ToList();
             Game.LogTrivial($"[RPE Ambient Event]: Common events: {CommonEvents.Count}, Uncommon events: {UncommonEvents.Count}, Rare events: {RareEvents.Count}");
             Game.LogTrivial($"[RPE Ambient Event]: Common Frequency: {Settings.CommonEventFrequency}, Uncommon Frequency: {Settings.UncommonEventFrequency}, Rare Frequency: {Settings.RareEventFrequency}");
 

@@ -3,6 +3,7 @@ using LSPD_First_Response.Mod.API;
 using System.Linq;
 using System.Windows.Forms;
 using System;
+using RichsPoliceEnhancements.Utils;
 
 namespace RichsPoliceEnhancements.Features
 {
@@ -19,78 +20,59 @@ namespace RichsPoliceEnhancements.Features
 
         internal static void Main()
         {
-            LHandle pursuit = null;
-            LHandle trafficStop = null;
             Events.OnCalloutAccepted += Events_OnCalloutAccepted;
 
             while (true)
             {
-                CheckForActivePursuit();
-                if (pursuit != null && !BackupOffered)
+                GameFiber.Yield();
+                if (Functions.GetCurrentPullover() == null && Functions.GetActivePursuit() == null)
                 {
+                    BackupOffered = false;
+                }
 
-                    PromptForAmbientBackup(Incident.Pursuit);
+                if (Functions.GetActivePursuit() != null && !BackupOffered)
+                {
+                    if (Settings.AlwaysAcceptAmbientBackup)
+                    {
+                        CheckForAmbientUnits(Incident.Pursuit);
+                    }
+                    else
+                    {
+                        PromptForAmbientBackup(Incident.Pursuit);
+                    }
                     continue;
                 }
 
-                CheckForActiveTrafficStop();
-                if (trafficStop != null && !BackupOffered)
+                if (Functions.GetCurrentPullover() != null && !BackupOffered)
                 {
-                    PromptForAmbientBackup(Incident.TrafficStop);
+                    if (Settings.AlwaysAcceptAmbientBackup)
+                    {
+                        CheckForAmbientUnits(Incident.TrafficStop);
+                    }
+                    else
+                    {
+                        PromptForAmbientBackup(Incident.TrafficStop);
+                    }
                 }
 
                 GameFiber.Sleep(100);
-            }
-
-            void CheckForActivePursuit()
-            {
-                if (Functions.GetActivePursuit() != null && pursuit == null)
-                {
-                    pursuit = Functions.GetActivePursuit();
-                }
-                else if (pursuit != null && Functions.GetActivePursuit() == null)
-                {
-                    pursuit = null;
-                    BackupOffered = false;
-                }
-            }
-
-            void CheckForActiveTrafficStop()
-            {
-
-                if (Functions.GetCurrentPullover() != null && trafficStop == null)
-                {
-                    trafficStop = Functions.GetCurrentPullover();
-                }
-                else if (trafficStop != null && Functions.GetCurrentPullover() == null)
-                {
-                    trafficStop = null;
-                    BackupOffered = false;
-                }
             }
         }
 
         private static void Events_OnCalloutAccepted(LHandle handle)
         {
             Game.LogTrivial($"[RPE Ambient Backup]: Callout accepted");
-            BackupOffered = false;
-            LHandle pursuit = null;
-            CheckForActivePursuit();
-            if (pursuit != null && !BackupOffered)
-            {
-                PromptForAmbientBackup(Incident.Pursuit);
-            }
 
-            void CheckForActivePursuit()
+            if (Functions.GetActivePursuit() != null && !BackupOffered)
             {
-                if (Functions.GetActivePursuit() != null && pursuit == null)
+                if (Settings.AlwaysAcceptAmbientBackup)
                 {
-                    pursuit = Functions.GetActivePursuit();
+                    Game.LogTrivial($"[RPE Ambient Backup]: Always accept ambient backup.");
+                    CheckForAmbientUnits(Incident.Pursuit);
                 }
-                else if (pursuit != null && Functions.GetActivePursuit() == null)
+                else
                 {
-                    pursuit = null;
-                    BackupOffered = false;
+                    PromptForAmbientBackup(Incident.Pursuit);
                 }
             }
         }
@@ -151,7 +133,7 @@ namespace RichsPoliceEnhancements.Features
 
             Vehicle GetNearbyPoliceVehicleWithDriver()
             {
-                foreach (Vehicle vehicle in Game.LocalPlayer.Character.GetNearbyVehicles(16).Where(v => v && v.IsPoliceVehicle && v != Game.LocalPlayer.Character.LastVehicle && v.HasDriver && v.Driver.IsAlive && !Functions.IsPedInPursuit(v.Driver)))
+                foreach (Vehicle vehicle in Game.LocalPlayer.Character.GetNearbyVehicles(16).Where(v => v && v.IsPoliceVehicle && v != Game.LocalPlayer.Character.LastVehicle && v.HasDriver && v.Driver.IsAlive && v.Driver.IsAmbient() && !Functions.IsPedInPursuit(v.Driver)))
                 {
                     return vehicle;
                 }

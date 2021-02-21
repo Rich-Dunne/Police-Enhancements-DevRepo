@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace RichsPoliceEnhancements.Features
 {
-    internal class SuspectStamina
+    internal static class SuspectStamina
     {
         internal static void Main()
         {
@@ -28,6 +28,7 @@ namespace RichsPoliceEnhancements.Features
                     Game.LogTrivial($"[RPE Suspect Stamina]: Assigning active pursuit to pursuit handle.");
                     pursuit = Functions.GetActivePursuit();
                     pursuitPeds = GetPursuitPeds();
+                    pursuitPeds.Remove(Game.LocalPlayer.Character);
                     AssignStamina(pursuitPeds);
                 }
 
@@ -43,14 +44,15 @@ namespace RichsPoliceEnhancements.Features
             }
         }
 
-        private static List<Ped> GetPursuitPeds() => Functions.GetPursuitPeds(Functions.GetActivePursuit()).ToList();
+        private static List<Ped> GetPursuitPeds() => Functions.GetPursuitPeds(Functions.GetActivePursuit()).Where(x => x && x.IsAlive && x != Game.LocalPlayer.Character && !Functions.IsPedACop(x)).ToList();
 
         private static void AssignStamina(List<Ped> pursuitPeds)
         {
             foreach (Ped ped in pursuitPeds)
             {
                 ped.Metadata.Stamina = 100;
-                Rage.Native.NativeFunction.Natives.SET_ENTITY_MAX_SPEED(ped, 6f);
+                ped.Metadata.RunSpeed = 6f;
+                Rage.Native.NativeFunction.Natives.SET_ENTITY_MAX_SPEED(ped, ped.Metadata.RunSpeed);
                 Game.LogTrivial($"[RPE Suspect Stamina]: Stamina is {ped.Metadata.Stamina}");
             }
         }
@@ -88,7 +90,6 @@ namespace RichsPoliceEnhancements.Features
                 else if (ped.Metadata.Stamina <= 25)
                 {
                     AdjustPedSpeed(ped, 3f);
-                    TryToTripPed(ped);
 
                     // Chance to stop and catch breath
                     // move_injured_generic runtowalk
@@ -99,22 +100,25 @@ namespace RichsPoliceEnhancements.Features
         private static void AdjustPedSpeed(Ped ped, float speed)
         {
             //Game.LogTrivial($"[RPE Suspect Stamina]: {ped.Model.Name} stamina is {ped.Metadata.Stamina}");
-            Rage.Native.NativeFunction.Natives.SET_ENTITY_MAX_SPEED(ped, speed);
+            ped.Metadata.RunSpeed = speed;
+            Rage.Native.NativeFunction.Natives.SET_ENTITY_MAX_SPEED(ped, ped.Metadata.RunSpeed);
+            GameFiber.StartNew(() => ped.SetPedMoveRateOverride(speed/6f), "Ped Move Rate Fiber");
         }
 
-        private static void TryToTripPed(Ped ped)
+        private static void SetPedMoveRateOverride(this Ped ped, float rate)
         {
-            if (new Random().Next(100) == 1)
+            var originalRunSpeed = ped.Metadata.RunSpeed;
+            while (ped.Metadata.RunSpeed == originalRunSpeed)
             {
-                Game.LogTrivial($"[RPE Suspect Stamina]: Suspect tripped");
-                ped.IsRagdoll = true;
-                GameFiber.Sleep(500);
                 if (!ped)
                 {
                     return;
                 }
-                ped.IsRagdoll = false;
+                Rage.Native.NativeFunction.Natives.x085BF80FA50A39D1(ped, rate);
+
+                GameFiber.Yield();
             }
+            //Game.LogTrivial($"[RPE Suspect Stamina]: Ped's run speed has changed, ending MoveRateOverride loop.");
         }
     }
 }

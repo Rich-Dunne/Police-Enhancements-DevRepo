@@ -29,17 +29,26 @@ namespace RichsPoliceEnhancements
         internal static string DriveByFrequency { get; private set; } = "off";
 
         // BOLO Settings
+        internal static bool EnableBOLOStartBlip { get; private set; } = false;
         internal static int BOLOTimer { get; private set; } = 10;
         internal static int BOLOFrequency { get; private set; } = 5;
 
         // PRT Settings
         internal static int PRTToneTimer { get; private set; } = 15;
         internal static bool AutomaticPRT { get; private set; } = false;
+        internal static bool DisablePRTNotifications { get; private set; } = false;
 
         // Pursuit Update Settings
         internal static int PursuitUpdateTimer { get; private set; } = 20;
         internal static bool DispatchUpdates { get; private set; } = false;
         internal static bool DisableNotifications { get; private set; } = false;
+
+        // Ambient Backup Settings
+        internal static bool AlwaysAcceptAmbientBackup { get; private set; } = false;
+
+        // Suspect Stamina Settings
+        internal static bool CanTripDuringFootPursuit { get; private set; } = false;
+        internal static int TripChance { get; private set; } = 1;
 
         internal static readonly InitializationFile ini = new InitializationFile("Plugins/LSPDFR/RichsPoliceEnhancements.ini");
 
@@ -76,6 +85,7 @@ namespace RichsPoliceEnhancements
             EventFrequencies.Add("DriveBy", DriveByFrequency);
 
             // BOLO Settings
+            EnableBOLOStartBlip = ini.ReadBoolean("BOLO Settings", "EnableBOLOStartBlip", false);
             BOLOTimer = ini.ReadInt32("BOLO Settings", "BOLOTimer", 10);
             BOLOTimer *= 60000;
             BOLOFrequency = ini.ReadInt32("BOLO Settings", "BOLOFrequency", 5);
@@ -84,12 +94,20 @@ namespace RichsPoliceEnhancements
             // PRT Settings
             PRTToneTimer = ini.ReadInt32("Priority Radio Traffic Settings", "PRTToneTimer", 15);
             AutomaticPRT = ini.ReadBoolean("Priority Radio Traffic Settings", "AutomaticPRT", false);
+            DisablePRTNotifications = ini.ReadBoolean("Priority Radio Traffic Settings", "DisablePRTNotifications", false);
 
             // Pursuit Update Settings
             PursuitUpdateTimer = ini.ReadInt32("Pursuit Update Settings", "PursuitUpdateTimer", 20);
             PursuitUpdateTimer *= 1000;
             DispatchUpdates = ini.ReadBoolean("Pursuit Update Settings", "DispatchUpdates", false);
             DisableNotifications = ini.ReadBoolean("Pursuit Update Settings", "DisableNotifications", false);
+
+            // Ambient Backup Settings
+            AlwaysAcceptAmbientBackup = ini.ReadBoolean("Ambient Backup Settings", "AlwaysAcceptAmbientBackup", false);
+
+            // Suspect Trip Settings
+            CanTripDuringFootPursuit = ini.ReadBoolean("Suspect Trip", "CanTripDuringFootPursuit", false);
+            TripChance = ini.ReadInt32("Suspect Trip", "TripChance", 1);
         }
     }
 }

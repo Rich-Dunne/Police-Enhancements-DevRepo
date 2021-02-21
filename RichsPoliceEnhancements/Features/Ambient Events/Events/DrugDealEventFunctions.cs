@@ -76,14 +76,14 @@ namespace RichsPoliceEnhancements
                 var dealer = dealers.FirstOrDefault(x => buyers.Any(y => y.DistanceTo2D(x) <= 10f));
                 if (!dealer)
                 {
-                    Game.LogTrivial($"[RPE Ambient Event]: No dealers found with a suitable buyer nearby.");
+                    //Game.LogTrivial($"[RPE Ambient Event]: No dealers found with a suitable buyer nearby.");
                     @event.Cleanup();
                     return;
                 }
                 var buyer = buyers.FirstOrDefault(x => x.DistanceTo2D(dealer) <= 10f);
                 if (!buyer)
                 {
-                    Game.LogTrivial($"[RPE Ambient Event]: No buyer found within range of the dealer.");
+                    //Game.LogTrivial($"[RPE Ambient Event]: No buyer found within range of the dealer.");
                     @event.Cleanup();
                     return;
                 }
@@ -188,15 +188,18 @@ namespace RichsPoliceEnhancements
                     }
                 }
 
-                if (Math.Abs(Game.LocalPlayer.Character.DistanceTo2D(dealer.Ped) - oldDistance) > 0.15 && Game.LocalPlayer.Character.DistanceTo2D(dealer.Ped) > oldDistance && dealer.Blip.Alpha > 0f)
+                if(Settings.EventBlips && dealer.Blip)
                 {
-                    dealer.Blip.Alpha -= 0.001f;
+                    if (Math.Abs(Game.LocalPlayer.Character.DistanceTo2D(dealer.Ped) - oldDistance) > 0.15 && Game.LocalPlayer.Character.DistanceTo2D(dealer.Ped) > oldDistance && dealer.Blip.Alpha > 0f)
+                    {
+                        dealer.Blip.Alpha -= 0.001f;
+                    }
+                    else if (Math.Abs(Game.LocalPlayer.Character.DistanceTo2D(dealer.Ped) - oldDistance) > 0.15 && Game.LocalPlayer.Character.DistanceTo2D(dealer.Ped) < oldDistance && dealer.Blip.Alpha < 1.0f)
+                    {
+                        dealer.Blip.Alpha += 0.01f;
+                    }
+                    oldDistance = Game.LocalPlayer.Character.DistanceTo2D(dealer.Ped);
                 }
-                else if (Math.Abs(Game.LocalPlayer.Character.DistanceTo2D(dealer.Ped) - oldDistance) > 0.15 && Game.LocalPlayer.Character.DistanceTo2D(dealer.Ped) < oldDistance && dealer.Blip.Alpha < 1.0f)
-                {
-                    dealer.Blip.Alpha += 0.01f;
-                }
-                oldDistance = Game.LocalPlayer.Character.DistanceTo2D(dealer.Ped);
                 GameFiber.Yield();
             }
 
