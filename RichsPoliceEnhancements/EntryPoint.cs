@@ -41,6 +41,7 @@ namespace RichsPoliceEnhancements
 
         private static void InitializeFeatures()
         {
+            Game.AddConsoleCommands(new[] { typeof(ConsoleCommands) });
             if (Settings.EnableAmbientEvents)
             {
                 Game.LogTrivial("[RPE]: AmbientEvents are enabled.");
@@ -129,6 +130,16 @@ namespace RichsPoliceEnhancements
             else
             {
                 Game.LogTrivial("[RPE]: SuspectStamina is disabled.");
+            }
+
+            if (Settings.CanTripDuringFootPursuit)
+            {
+                Game.LogTrivial($"[RPE]: SuspectTrip is enabled.");
+                GameFiber.StartNew(() => SuspectTrip.Main(), "RPE Suspect Trip Fiber");
+            }
+            else
+            {
+                Game.LogTrivial($"[RPE]: SuspectTrip is disabled.");
             }
         }
 
