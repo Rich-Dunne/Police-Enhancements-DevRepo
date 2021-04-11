@@ -34,6 +34,10 @@ namespace RichsPoliceEnhancements
                 PriorityRadioTraffic.VDPRTCancel.ReleaseVocalDispatchAPI();
                 PriorityRadioTraffic.VDPRTRequest.ReleaseVocalDispatchAPI();
             }
+            if(AmbientEvents.ActiveEvent != null)
+            {
+                AmbientEvents.ActiveEvent.Cleanup(false);
+            }
             Game.LogTrivial("[RPE]: Rich's Police Enhancements has been cleaned up.");
 
             bool IsPluginLoaded(string pluginName) => Functions.GetAllUserPlugins().ToList().Any(a => a.FullName.Contains(pluginName));
