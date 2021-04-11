@@ -28,57 +28,86 @@ namespace RichsPoliceEnhancements
         CarVsAnimal = 17
     }
 
+    internal enum State
+    {
+        Uninitialized = 0,
+        Preparing = 1,
+        Running = 2,
+        Ending = 3
+    }
+
     internal class AmbientEvent
     {
-        internal EventType EventType { get; private set; }
+        internal State State { get; private set; } = State.Uninitialized;
+        internal EventType EventType { get; set; }
         internal List<EventPed> EventPeds { get; private set; } = new List<EventPed>();
         internal List<EventVehicle> EventVehicles { get; private set; } = new List<EventVehicle>();
         internal List<Blip> EventBlips { get; private set; } = new List<Blip>();
 
-        internal AmbientEvent(EventType eventType)
-        {
-            AppDomain.CurrentDomain.DomainUnload += TerminationHandler;
-            EventType = eventType;
-            RunEventFunctions(eventType);
-        }
+        internal AmbientEvent() { }
 
-        private void RunEventFunctions(EventType eventType)
+        internal void TransitionToState(State state)
         {
-            switch (eventType)
+            if(State == state)
             {
-                case EventType.DrugDeal:
-                    DrugDealEventFunctions.BeginEvent(this);
+                Game.LogTrivial($"State is already {state}");
+                return;
+            }
+
+            State = state;
+
+            switch(state)
+            {
+                case State.Preparing:
+                    AmbientEvents.ActiveEvent = this;
+                    Game.LogTrivial($"[RPE Ambient Event]: Beginning {GetType().Name} event.");
                     break;
-                case EventType.DriveBy:
-                    DriveByEventFunctions.BeginEvent(this);
+                case State.Running:
+                    Game.LogTrivial($"[RPE Ambient Event]: Preparation for {GetType().Name} event complete. Running");
                     break;
-                case EventType.CarJacking:
-                    CarJackingEventFunctions.BeginEvent(this);
-                    break;
-                case EventType.Assault:
-                    AssaultEventFunctions.BeginEvent(this);
+                case State.Ending:
+                    Game.LogTrivial($"[RPE Ambient Event]: Ending {GetType().Name} event.");
+                    Cleanup();
                     break;
             }
         }
 
-        internal void Cleanup()
+        internal void Cleanup(bool smoothEnding = true)
         {
             // Clean up EventBlips
-            foreach (Blip blip in EventBlips.Where(b => b))
+            if(smoothEnding)
             {
-                blip.Delete();
+                foreach (Blip blip in EventBlips.Where(b => b))
+                {
+                    while (blip && blip.Alpha > 0)
+                    {
+                        blip.Alpha -= 0.01f;
+                        GameFiber.Yield();
+                    }
+                    if (blip)
+                    {
+                        blip.Delete();
+                    }
+                }
+            }
+            else
+            {
+                foreach (Blip blip in EventBlips.Where(b => b))
+                {
+                    blip.Delete();
+                }
             }
             EventBlips.Clear();
 
             // Clean up EventPeds
-            foreach (EventPed EP in EventPeds.Where(x => x.Ped))
+            foreach (EventPed eventPed in EventPeds.Where(x => x))
             {
-                foreach (Blip blip in EP.Ped.GetAttachedBlips().Where(b => b))
+                foreach (Blip blip in eventPed.GetAttachedBlips().Where(b => b))
                 {
                     blip.Delete();
                 }
-                EP.Ped.BlockPermanentEvents = false;
-                EP.Ped.Dismiss();
+                eventPed.BlockPermanentEvents = false;
+                eventPed.Dismiss();
             }
             EventPeds.Clear();
 
@@ -89,14 +118,7 @@ namespace RichsPoliceEnhancements
             //}
             //EventVehicles.Clear();
 
-            AmbientEvents.SetEventActiveFalse();
-            AppDomain.CurrentDomain.DomainUnload -= TerminationHandler;
-        }
-
-        private void TerminationHandler(object sender, EventArgs e)
-        {
-            Cleanup();
-            Game.LogTrivial("[RPE Ambient Event]: Plugin terminated.");
+            AmbientEvents.ActiveEvent = null;
         }
     }
 }
