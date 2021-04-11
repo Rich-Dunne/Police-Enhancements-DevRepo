@@ -27,6 +27,7 @@ namespace RichsPoliceEnhancements
         internal static string CarJackingFrequency { get; private set; } = "off";
         internal static string DrugDealFrequency { get; private set; } = "off";
         internal static string DriveByFrequency { get; private set; } = "off";
+        internal static string ProstitutionFrequency { get; private set; } = "off";
 
         // BOLO Settings
         internal static bool EnableBOLOStartBlip { get; private set; } = false;
@@ -83,6 +84,8 @@ namespace RichsPoliceEnhancements
             EventFrequencies.Add("DrugDeal", DrugDealFrequency);
             DriveByFrequency = ini.ReadString("Ambient Events", "DriveByFrequency", "off");
             EventFrequencies.Add("DriveBy", DriveByFrequency);
+            ProstitutionFrequency = ini.ReadString("Ambient Events", "ProstitutionFrequency", "off");
+            EventFrequencies.Add("DriveBy", ProstitutionFrequency);
 
             // BOLO Settings
             EnableBOLOStartBlip = ini.ReadBoolean("BOLO Settings", "EnableBOLOStartBlip", false);
