@@ -146,7 +146,7 @@ namespace RichsPoliceEnhancements.Features
             ambientPoliceUnit.IsPersistent = true;
             ambientPoliceUnit.Driver.IsPersistent = true;
             ambientPoliceUnit.Driver.BlockPermanentEvents = true;
-            var approachPosition = Game.LocalPlayer.Character.LastVehicle.GetOffsetPosition(new Vector3(0, -15f, 0));
+            var approachPosition = Game.LocalPlayer.Character.LastVehicle.GetOffsetPosition(new Vector3(0, -15f, 0)); // Null ref
             var backupPosition = Game.LocalPlayer.Character.LastVehicle.GetOffsetPosition(new Vector3(0, -8f, 0));
             var acceptedDistance = GetAcceptedStoppingDistance();
 
@@ -164,6 +164,10 @@ namespace RichsPoliceEnhancements.Features
 
             Game.LogTrivial($"[RPE Ambient Backup]: Ambient backup unit is on final approach.");
             ambientPoliceUnit.Driver.Tasks.DriveToPosition(backupPosition, 5f, (VehicleDrivingFlags)786868, acceptedDistance).WaitForCompletion();
+            if (!VehicleAndDriverAreValid())
+            {
+                return;
+            }
 
             Game.LogTrivial($"[RPE Ambient Backup]: Ambient backup unit is exiting their vehicle.");
             ambientPoliceUnit.Driver.Tasks.LeaveVehicle(LeaveVehicleFlags.None);
