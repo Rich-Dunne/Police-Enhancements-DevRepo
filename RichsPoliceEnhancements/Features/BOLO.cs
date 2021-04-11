@@ -243,7 +243,7 @@ namespace RichsPoliceEnhancements.Features
             {
                 var boloVehiclesList = new List<Vehicle>();
                 var pulloverVehicle = GetPulloverVehicle();
-                var potentialBOLOVehicles = World.GetAllVehicles().Where(x => x && x.IsCar && !x.IsPoliceVehicle && !x.HasSiren && !x.HasTowArm && x != Game.LocalPlayer.Character.CurrentVehicle && x != Game.LocalPlayer.Character.LastVehicle && x.HasDriver && x.Driver.IsAlive && (pulloverVehicle != null && x != pulloverVehicle));
+                var potentialBOLOVehicles = World.GetAllVehicles().Where(x => x && x.IsCar && !x.IsPoliceVehicle && !x.HasSiren && !x.HasTowArm && x.HasDriver && x.Driver && x.Driver.IsAlive && x.Driver != Game.LocalPlayer.Character && (pulloverVehicle != null && x != pulloverVehicle));
                 
                 foreach (Vehicle vehicle in potentialBOLOVehicles.Where(x => x))
                 {
@@ -321,7 +321,12 @@ namespace RichsPoliceEnhancements.Features
             catch
             {
                 Game.LogTrivial($"[RPE BOLO]: There was a problem getting the vehicle's color.  Ending BOLO event.");
-                BOLOActive = false;
+                BOLOVehicle = null;
+                if (StartBlip != null)
+                {
+                    StartBlip.Delete();
+                    StartBlip = null;
+                }
                 return;
             }
             var boloVehSkin = VehicleSkin.FromVehicle(BOLOVehicle);
