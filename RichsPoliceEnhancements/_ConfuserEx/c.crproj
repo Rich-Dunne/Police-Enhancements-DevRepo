@@ -10,18 +10,12 @@
 <protection id="anti debug" />
 <protection id="ref proxy" />
 <protection id="resources" />
-<protection id = "rename" >
-<argument name = "mode" value = "decodable" />
-<argument name = "renPublic" value = "false" />
-<argument name = "renEnum" value = "false" />
-<argument name = "renameArgs" value = "false" />
-</protection >
 </rule>
 </module>
 <probePath>C:\Users\Rich\Desktop\Mod Stuff\Core Plugins\Grammar Police\Grand Theft Auto V\plugins\LSPDFR</probePath>
 <probePath>D:\Program Files\Rockstar Games\Grand Theft Auto V\plugins</probePath>
 <probePath>C:\Users\Rich\Desktop\Mod Stuff\Core Plugins\PoliceSmartRadio 1.2.0.0 by Albo1125 RPH0.51orhigher\API Reference - Developers Only</probePath>
-<probePath>C:\Users\Rich\Desktop\Mod Stuff\Mod Development\Modding Resources\References</probePath>
+<probePath>..\..\..\packages\RagePluginHook.1.86.1\lib\net472</probePath>
 <probePath>C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.8</probePath>
 <probePath>..\..\bin\Release</probePath>
 </project>

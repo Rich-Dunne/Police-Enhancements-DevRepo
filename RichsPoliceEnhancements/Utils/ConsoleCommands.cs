@@ -4,10 +4,12 @@ using LSPD_First_Response.Mod.API;
 using Rage;
 using System.Linq;
 using RichsPoliceEnhancements.Features;
+using System.Reflection;
 
 namespace RichsPoliceEnhancements.Utils
 {
-    class ConsoleCommands
+    [Obfuscation(Exclude = false, Feature = "-rename", ApplyToMembers = false)]
+    internal static class ConsoleCommands
     {
         [ConsoleCommand("ForceEndPursuit")]
         internal static void Command_ForceEndPursuit([ConsoleCommandParameter(AutoCompleterType = typeof(ConsoleCommandAutoCompleterBoolean), Name = "ForceEndPursuit")] bool enabled = true)
