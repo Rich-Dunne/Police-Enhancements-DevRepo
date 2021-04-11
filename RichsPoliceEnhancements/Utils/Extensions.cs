@@ -218,7 +218,7 @@ namespace RichsPoliceEnhancements.Utils
             NativeMethods.TaskVehicleShootAtPed(ped, target, unknown);
         }
 
-        internal static void MaxSpeed(this Entity entity, float speed)
+        internal static void SetMaxSpeed(this Entity entity, float speed)
         {
             NativeMethods.SetEntityMaxSpeed(entity, speed);
         }

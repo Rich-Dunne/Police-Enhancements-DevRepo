@@ -95,7 +95,7 @@ namespace RichsPoliceEnhancements.Features
                     return;
                 }
                 Game.LogTrivial($"[RPE Ambient Event]: Victim is fleeing.");
-                _victim.MaxSpeed(4f);
+                _victim.SetMaxSpeed(4f);
                 _victim.Tasks.ReactAndFlee(_suspect);
             }
         }
