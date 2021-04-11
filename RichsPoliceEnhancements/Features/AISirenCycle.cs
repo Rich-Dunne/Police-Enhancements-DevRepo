@@ -80,9 +80,9 @@ namespace RichsPoliceEnhancements.Features
                     return;
                 }
 
-                if (!policeVeh.HasDriver)
+                if (!policeVeh.HasDriver || !policeVeh.Driver.IsAlive)
                 {
-                    Game.LogTrivial($"[RPE AI Siren Cycle]: Police vehicle doesn't have a driver.  We'll keep looping in case they re-enter the vehicle.");
+                    Game.LogTrivial($"[RPE AI Siren Cycle]: Police vehicle doesn't have a live driver.  We'll keep looping in case the vehicle gets a new driver.");
                     GameFiber.Yield();
                     continue;
                 }
