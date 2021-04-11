@@ -1,4 +1,5 @@
 ﻿using Rage;
+using RichsPoliceEnhancements.Features;
 using System.Drawing;
 
 namespace RichsPoliceEnhancements
@@ -10,20 +11,18 @@ namespace RichsPoliceEnhancements
         Victim = 1,
     }
 
-    internal class EventPed
+    internal class EventPed : Ped
     {
         internal AmbientEvent Event { get; private set; }
-
-        internal Ped Ped { get; private set; }
 
         internal Role Role { get; private set; }
 
         internal Blip Blip { get; private set; }
 
-        internal EventPed(AmbientEvent @event, Ped ped, Role role, bool giveBlip, BlipSprite sprite = BlipSprite.StrangersandFreaks)
+        internal EventPed(Ped ped, Role role, bool giveBlip, BlipSprite sprite = BlipSprite.StrangersandFreaks)
         {
-            Event = @event;
-            Ped = ped;
+            Event = AmbientEvents.ActiveEvent;
+            Handle = ped.Handle;
             SetPersistence();
             Role = role;
             if (Settings.EventBlips && giveBlip)
@@ -35,13 +34,13 @@ namespace RichsPoliceEnhancements
 
         private void SetPersistence()
         {
-            Ped.IsPersistent = true;
-            Ped.BlockPermanentEvents = true;
+            IsPersistent = true;
+            BlockPermanentEvents = true;
         }
 
         private void CreateBlip(BlipSprite sprite)
         {
-            Blip = Ped.AttachBlip();
+            Blip = AttachBlip();
             Blip.Sprite = sprite;
             if(Role == Role.PrimarySuspect)
             {
