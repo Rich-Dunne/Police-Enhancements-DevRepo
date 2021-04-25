@@ -1,10 +1,5 @@
 ﻿using Rage;
 using LSPD_First_Response.Mod.API;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.IO;
 
 namespace RichsPoliceEnhancements.Utils
@@ -13,7 +8,7 @@ namespace RichsPoliceEnhancements.Utils
     {
         internal static void Start()
         {
-            string directory = Directory.GetCurrentDirectory() + "\\lspdfr\\audio\\scanner\\STREETS";
+            string directory = Directory.GetCurrentDirectory() + "\\lspdfr\\audio\\scanner\\STREETS\\ProblemFiles";
             GameFiber.StartNew(() =>
             {
                 string[] files = Directory.GetFiles(directory, "*.wav");
@@ -23,7 +18,7 @@ namespace RichsPoliceEnhancements.Utils
                     var streetAudio = $"{Path.GetFileNameWithoutExtension(file).Replace(" ", "_").ToUpper()}";
                     Game.LogTrivial($"{streetAudio}");
                     Functions.PlayScannerAudio(streetAudio);
-                    GameFiber.Sleep(3000);
+                    GameFiber.Sleep(5000);
                 }
             }, "Play Audio Files Fiber");
         }

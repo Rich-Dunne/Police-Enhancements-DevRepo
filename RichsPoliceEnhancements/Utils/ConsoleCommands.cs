@@ -3,7 +3,6 @@ using Rage.ConsoleCommands.AutoCompleters;
 using LSPD_First_Response.Mod.API;
 using Rage;
 using System.Linq;
-using RichsPoliceEnhancements.Features;
 using System.Reflection;
 
 namespace RichsPoliceEnhancements.Utils
@@ -37,24 +36,6 @@ namespace RichsPoliceEnhancements.Utils
             {
                 ped.Dismiss();
             }
-        }
-
-        [ConsoleCommand("BeginAmbientEvent")]
-        internal static void Command_BeginAmbientEvent([ConsoleCommandParameter(AutoCompleterType = typeof(ConsoleCommandParameterAutoCompleterEnum), Name = "BeginAmbientEvent")] EventType eventType)
-        {
-            AmbientEvents.InitializeNewEvent(eventType);
-        }
-
-        [ConsoleCommand("EndAmbientEvent")]
-        internal static void Command_EndAmbientEvent([ConsoleCommandParameter(AutoCompleterType = typeof(ConsoleCommandAutoCompleterBoolean), Name = "EndAmbientEvent")] bool end = true)
-        {
-            if(AmbientEvents.ActiveEvent == null)
-            {
-                Game.LogTrivial($"ActiveEvent is null.");
-                return;
-            }
-
-            AmbientEvents.ActiveEvent.TransitionToState(State.Ending);
         }
 
         //[ConsoleCommand("PlayAudioFiles")]

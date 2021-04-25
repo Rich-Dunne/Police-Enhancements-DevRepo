@@ -9,6 +9,6 @@ namespace RichsPoliceEnhancements.Utils
 {
     internal static class HelperMethods
     {
-        internal static List<Ped> GetReleventPedsForAmbientEvent() => World.GetAllPeds().Where(p => p.IsRelevantForAmbientEvent()).ToList();
+
     }
 }
