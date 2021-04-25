@@ -84,16 +84,6 @@ namespace RichsPoliceEnhancements
                 Game.LogTrivial("[RPE]: TVI is disabled.");
             }
 
-            if (Settings.EnableBOLO)
-            {
-                Game.LogTrivial("[RPE]: BOLO is enabled.");
-                GameFiber.StartNew(() => BOLO.Main(), "RPE BOLO Fiber");
-            }
-            else
-            {
-                Game.LogTrivial("[RPE]: BOLO is disabled.");
-            }
-
             if (Settings.EnablePRT)
             {
                 Game.LogTrivial("[RPE]: PriorityRadioTraffic is enabled.");
