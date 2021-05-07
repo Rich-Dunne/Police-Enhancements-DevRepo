@@ -10,8 +10,8 @@ namespace RichsPoliceEnhancements.Utils
     [Obfuscation(Exclude = false, Feature = "-rename", ApplyToMembers = false)]
     internal static class ConsoleCommands
     {
-        [ConsoleCommand("ForceEndPursuit")]
-        internal static void Command_ForceEndPursuit([ConsoleCommandParameter(AutoCompleterType = typeof(ConsoleCommandAutoCompleterBoolean), Name = "ForceEndPursuit")] bool enabled = true)
+        [ConsoleCommand("EndPursuit")]
+        internal static void Command_EndPursuit([ConsoleCommandParameter(AutoCompleterType = typeof(ConsoleCommandAutoCompleterBoolean), Name = "EndPursuit")] bool enabled = true)
         {
             if(!enabled)
             {
