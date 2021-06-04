@@ -38,6 +38,13 @@ namespace RichsPoliceEnhancements.Utils
             }
         }
 
+        [ConsoleCommand("ForceNullRefException")]
+        internal static void Command_ForceNullRefExceptionRPE()
+        {
+            var ped = new Ped();
+            ped.CurrentVehicle.Delete();
+        }
+
         //[ConsoleCommand("PlayAudioFiles")]
         //internal static void Command_PlayAudioFiles([ConsoleCommandParameter(AutoCompleterType = typeof(ConsoleCommandAutoCompleterBoolean), Name = "PlayAudioFiles")] bool enabled = true)
         //{
