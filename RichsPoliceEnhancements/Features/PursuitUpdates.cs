@@ -8,8 +8,8 @@ namespace RichsPoliceEnhancements.Features
 {
     public class PursuitUpdates
     {
-        private static Vehicle SuspectVehicle { get; set; } = null;
-        private static int NotificationTimer { get; } = Settings.PursuitUpdateTimer;
+        //private static List<Ped> _Suspects { get; set; } = new List<Ped>();
+        private static int _NotificationTimer { get; } = Settings.PursuitUpdateTimer;
 
         private enum Direction
         {
@@ -28,8 +28,6 @@ namespace RichsPoliceEnhancements.Features
 
         internal static void PursuitUpdateHandler(LHandle pursuit)
         {
-            List<Vehicle> vehiclesList = new List<Vehicle>();
-
             Game.LogTrivial($"[RPE Pursuit Update]: Pursuit started");
             GameFiber.StartNew(() =>
             {
@@ -40,28 +38,26 @@ namespace RichsPoliceEnhancements.Features
                     return;
                 }
 
-                SuspectVehicle = Functions.GetPursuitPeds(pursuit).FirstOrDefault(p => p && p.IsAlive && !Functions.IsPedACop(p) && p.IsInAnyVehicle(false))?.CurrentVehicle;
-
-                if (SuspectVehicle)
+                var suspects = Functions.GetPursuitPeds(pursuit).Where(p => p && p.IsAlive && !Functions.IsPedACop(p)).ToList();
+                Game.LogTrivial($"[RPE Pursuit Update]: {suspects.Count()} suspects fleeing.");
+                if(suspects.Count == 0)
                 {
-                    for(int i = 0; i < SuspectVehicle.Occupants.Count(); i++)
-                    {
-                        var occupant = SuspectVehicle.Occupants[i];
-                        if (occupant && occupant.IsAlive && Functions.IsPedInPursuit(occupant))
-                        {
-                            GameFiber.StartNew(() => NotificationUpdater(occupant, vehiclesList, i), "Notification Update Fiber");
-                        }
-                        GameFiber.Sleep(1000);
-                    }
+                    Game.LogTrivial($"[RPE Pursuit Update]: No valid suspects.  Ending pursuit updates.");
+                    return;
                 }
-                else
+
+                for(int i = 0; i < suspects.Count; i++)
                 {
-                    Game.LogTrivial($"[RPE Pursuit Update]: Suspect vehicle is null.");
+                    if (suspects[i] && suspects[i].IsAlive && Functions.IsPedInPursuit(suspects[i]))
+                    {
+                        GameFiber.StartNew(() => NotificationUpdater(suspects[i], i), "Notification Update Fiber");
+                    }
+                    GameFiber.Sleep(1000);
                 }
             }, "Pursuit Suspect Collector Fiber");
         }
 
-        private static void NotificationUpdater(Ped suspect, List<Vehicle> vehiclesList, int suspectNumber)
+        private static void NotificationUpdater(Ped suspect, int suspectNumber)
         {
             bool suspectVisualLost = false;
             suspectNumber++;
@@ -71,12 +67,12 @@ namespace RichsPoliceEnhancements.Features
             {
                 if (!SuspectIsValid(suspect))
                 {
-                    break;
+                    return;
                 }
                 if (Functions.GetActivePursuit() == null)
                 {
                     Game.LogTrivial($"[RPE Pursuit Update]: Pursuit is over.  Stopping notifications.");
-                    break;
+                    return;
                 }
 
                 if (suspectVisualLost && !Functions.IsPedVisualLost(suspect))
@@ -109,7 +105,7 @@ namespace RichsPoliceEnhancements.Features
                         GetFootPursuitNotification(streetName, direction);
                     }
                 }
-                GameFiber.Sleep(NotificationTimer);
+                GameFiber.Sleep(_NotificationTimer);
             }
 
             void GetVehiclePursuitNotification(string streetName, int direction, double speed)
@@ -167,26 +163,19 @@ namespace RichsPoliceEnhancements.Features
 
             int GetTrafficCondition()
             {
+                List<Vehicle> vehiclesList = new List<Vehicle>();
                 if (!suspect.CurrentVehicle)
                 {
                     Game.LogTrivial($"[RPE Pursuit Update]: Cannot get traffic condition, suspect is on foot.");
                     return -1;
                 }
 
-                if (vehiclesList.Count > 0)
-                {
-                    vehiclesList.Clear();
-                }
                 foreach (Vehicle v in suspect.CurrentVehicle?.Driver.GetNearbyVehicles(16))
                 {
-                    if (v && v.HasDriver && !v.IsPoliceVehicle && v != SuspectVehicle)
+                    if (v && v.HasDriver && !v.IsPoliceVehicle && v != suspect.CurrentVehicle)
                     {
                         //Game.LogTrivial("[RPE Pursuit Update]: Added nearby vehicle to list");
                         vehiclesList.Add(v);
-                    }
-                    else
-                    {
-                        //Game.LogTrivial("[RPE Pursuit Update]: Vehicle found but not added");
                     }
                 }
 
@@ -194,11 +183,11 @@ namespace RichsPoliceEnhancements.Features
                 {
                     return 0;
                 }
-                else if (vehiclesList.Count >= 6 && vehiclesList.Count < 12)
+                if (vehiclesList.Count >= 6 && vehiclesList.Count < 12)
                 {
                     return 1;
                 }
-                else if (vehiclesList.Count >= 12)
+                if (vehiclesList.Count >= 12)
                 {
                     return 2;
                 }
@@ -260,7 +249,7 @@ namespace RichsPoliceEnhancements.Features
         {
             Functions.PlayScannerAudio($"ATTENTION_ALL_UNITS EVADED ALL_UNITS_ATTEMPT_TO_REAQUIRE");
             Game.LogTrivial($"[RPE Pursuit Update]: Visual lost for suspect.  No notifications will be given until visual is regained.");
-            GameFiber.Sleep(NotificationTimer);
+            GameFiber.Sleep(_NotificationTimer);
         }
     }
 }
