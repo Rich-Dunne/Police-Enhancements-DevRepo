@@ -2,8 +2,9 @@
 using System.IO;
 using Rage;
 using VocalDispatchAPIExample;
-using GrammarPolice.API;
 using LSPD_First_Response.Mod.API;
+using System.Xml;
+using System.Xml.Linq;
 
 namespace RichsPoliceEnhancements.Features
 {
@@ -32,11 +33,43 @@ namespace RichsPoliceEnhancements.Features
             {
                 Game.LogTrivial("[RPE Priority Radio Traffic]: GrammarPolice is installed.");
                 SubscribeGrammarPoliceOnActionEvent();
+                CheckForOutdatedXMLs();
             }
             else if (vocalDispatchInstalled)
             {
                 Game.LogTrivial("[RPE Priority Radio Traffic]: VocalDispatch is installed.");
                 HandleVDFunctions();
+            }
+        }
+
+        private static void CheckForOutdatedXMLs()
+        {
+            
+            var pathToFile = Directory.GetCurrentDirectory() + "\\plugins\\LSPDFR\\GrammarPolice\\grammar\\en-US\\custom\\commands";
+            
+            // Remove requestPRT.xml
+            var requestPRTExists = File.Exists(pathToFile + "\\requestPRT.xml");
+            if(requestPRTExists)
+            {
+                Game.LogTrivial($"[RPE Priority Radio Traffic]: requestPRT needs to be deleted.");
+                File.Delete(pathToFile + "\\requestPRT.xml");
+                Game.LogTrivial($"[RPE Priority Radio Traffic]: requestPRT deleted successfully.");
+            }
+            else
+            {
+                Game.LogTrivial($"[RPE Priority Radio Traffic]: requestPRT does not exist.");
+            }
+
+            // Remove <Action> element from cancelPRT.xml
+            XDocument document = XDocument.Load(pathToFile + "\\cancelPRT.xml");
+            foreach (XElement element in document.Element("Command").Elements())
+            {
+                if (element.Name == "Action")
+                {
+                    element.Remove();
+                    document.Save(pathToFile + "\\cancelPRT.xml");
+                    Game.LogTrivial($"[RPE Priority Radio Traffic]: \"Action\" node removed from cancelPRT.xml");
+                }
             }
         }
 
@@ -90,7 +123,6 @@ namespace RichsPoliceEnhancements.Features
         private static bool VocalDispatchSaysPlayerIsCancelingPriorityTraffic() //You do not need to call this function. VocalDispatch calls it for you once you've set it up properly.
         {
             //Do your desired logic here. Returning false back to VocalDispatch will tell it to continue handling the request.
-            //Game.DisplayNotification("VocalDispatch handled the request for canceling priority radio traffic.");
             if (PRT)
             {
                 TogglePRT(false);
