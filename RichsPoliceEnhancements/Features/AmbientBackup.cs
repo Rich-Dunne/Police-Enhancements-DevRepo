@@ -43,17 +43,17 @@ namespace RichsPoliceEnhancements.Features
                     continue;
                 }
 
-                if (Functions.GetCurrentPullover() != null && !BackupOffered)
-                {
-                    if (Settings.AlwaysAcceptAmbientBackup)
-                    {
-                        CheckForAmbientUnits(Incident.TrafficStop);
-                    }
-                    else
-                    {
-                        PromptForAmbientBackup(Incident.TrafficStop);
-                    }
-                }
+                //if (Functions.GetCurrentPullover() != null && !BackupOffered)
+                //{
+                //    if (Settings.AlwaysAcceptAmbientBackup)
+                //    {
+                //        CheckForAmbientUnits(Incident.TrafficStop);
+                //    }
+                //    else
+                //    {
+                //        PromptForAmbientBackup(Incident.TrafficStop);
+                //    }
+                //}
 
                 GameFiber.Sleep(100);
             }
@@ -117,11 +117,11 @@ namespace RichsPoliceEnhancements.Features
                 var ambientPoliceUnit = GetNearbyPoliceVehicleWithDriver();
                 if (ambientPoliceUnit != null)
                 {
-                    if(incident == Incident.TrafficStop)
-                    {
-                        GameFiber.StartNew(() => GiveAmbientUnitBackupTasks(ambientPoliceUnit), "Ambient Backup Task Fiber");
-                        break;
-                    }
+                    //if(incident == Incident.TrafficStop)
+                    //{
+                    //    GameFiber.StartNew(() => GiveAmbientUnitBackupTasks(ambientPoliceUnit), "Ambient Backup Task Fiber");
+                    //    break;
+                    //}
                     if(incident == Incident.Pursuit)
                     {
                         AddAmbientUnitToPursuit(ambientPoliceUnit);
@@ -141,96 +141,115 @@ namespace RichsPoliceEnhancements.Features
             }
         }
 
-        private static void GiveAmbientUnitBackupTasks(Vehicle ambientPoliceUnit)
-        {
-            ambientPoliceUnit.IsPersistent = true;
-            ambientPoliceUnit.Driver.IsPersistent = true;
-            ambientPoliceUnit.Driver.BlockPermanentEvents = true;
-            var approachPosition = Game.LocalPlayer.Character.LastVehicle.GetOffsetPosition(new Vector3(0, -15f, 0)); // Null ref
-            var backupPosition = Game.LocalPlayer.Character.LastVehicle.GetOffsetPosition(new Vector3(0, -8f, 0));
-            var acceptedDistance = GetAcceptedStoppingDistance();
+        //private static void GiveAmbientUnitBackupTasks(Vehicle ambientPoliceUnit)
+        //{
+        //    ambientPoliceUnit.IsPersistent = true;
+        //    ambientPoliceUnit.Driver.IsPersistent = true;
+        //    ambientPoliceUnit.Driver.BlockPermanentEvents = true;
+        //    var ambientUnit = ambientPoliceUnit.Driver;
+        //    var approachPosition = Game.LocalPlayer.Character.LastVehicle.GetOffsetPosition(new Vector3(0, -15f, 0)); // Null ref
+        //    var backupPosition = Game.LocalPlayer.Character.LastVehicle.GetOffsetPosition(new Vector3(0, -8f, 0));
+        //    var acceptedDistance = GetAcceptedStoppingDistance();
 
-            ambientPoliceUnit.Driver.Tasks.DriveToPosition(approachPosition, 20f, (VehicleDrivingFlags)786868, acceptedDistance);
-            while (VehicleAndDriverAreValid() && ambientPoliceUnit.DistanceTo2D(approachPosition) > acceptedDistance)
-            {
-                CheckUnitTaskStatus();
-                GameFiber.Yield();
-            }
+        //    ambientPoliceUnit.Driver.Tasks.DriveToPosition(approachPosition, 20f, (VehicleDrivingFlags)786868, acceptedDistance);
+        //    while (VehicleAndDriverAreValid() && ambientPoliceUnit.DistanceTo2D(approachPosition) > acceptedDistance)
+        //    {
+        //        CheckUnitTaskStatus();
+        //        GameFiber.Yield();
+        //    }
 
-            if (!VehicleAndDriverAreValid())
-            {
-                return;
-            }
+        //    if (!VehicleAndDriverAreValid())
+        //    {
+        //        return;
+        //    }
 
-            Game.LogTrivial($"[RPE Ambient Backup]: Ambient backup unit is on final approach.");
-            ambientPoliceUnit.Driver.Tasks.DriveToPosition(backupPosition, 5f, (VehicleDrivingFlags)786868, acceptedDistance).WaitForCompletion();
-            if (!VehicleAndDriverAreValid())
-            {
-                return;
-            }
+        //    Game.LogTrivial($"[RPE Ambient Backup]: Ambient backup unit is on final approach.");
+        //    ambientPoliceUnit.Driver.Tasks.DriveToPosition(backupPosition, 5f, (VehicleDrivingFlags)786868, acceptedDistance).WaitForCompletion();
+        //    if (!VehicleAndDriverAreValid())
+        //    {
+        //        return;
+        //    }
 
-            Game.LogTrivial($"[RPE Ambient Backup]: Ambient backup unit is exiting their vehicle.");
-            ambientPoliceUnit.Driver.Tasks.LeaveVehicle(LeaveVehicleFlags.None);
+        //    Game.LogTrivial($"[RPE Ambient Backup]: Ambient backup unit is exiting their vehicle.");
+        //    ambientPoliceUnit.Driver.Tasks.LeaveVehicle(LeaveVehicleFlags.None);
+        //    while(ambientUnit && ambientPoliceUnit && ambientUnit.IsInVehicle(ambientPoliceUnit, false))
+        //    {
+        //        GameFiber.Yield();
+        //    }
+        //    if(!ambientUnit)
+        //    {
+        //        Game.LogTrivial($"Ambient unit is invalid.");
+        //        return;
+        //    }
 
-            float GetAcceptedStoppingDistance()
-            {
-                var dist = (MathHelper.ConvertMetersPerSecondToMilesPerHour(15f) / (250 * 0.8f));
-                return MathHelper.Clamp(dist, 2, 10);
-            }
+        //    if(Game.LocalPlayer.Character.Inventory.EquippedWeapon != null)
+        //    {
+        //        ambientUnit.Inventory.EquippedWeapon = ambientUnit.Inventory.Weapons.First();
+        //        if(Game.LocalPlayer.Character.IsAiming)
+        //        {
+        //            ambientUnit.Tasks.AimWeaponAt(Game.LocalPlayer.GetFreeAimingTarget(),-1);
+        //        }
+        //    }
+        //    else
+        //    {
+        //        ambientUnit.Tasks.PlayAnimation("amb@world_human_cop_idles@male@base","base",1.0f,AnimationFlags.Loop); // Not working or not the right animation
+        //    }
+        //    Game.DisplayNotification($"~o~Rich's Police Enhancements~w~\nAmbient backup has arrived.  Convert them to a partner with ~y~Ultimate Backup ~w~to interact with them.");
 
-            void CheckUnitTaskStatus()
-            {
-                if (ambientPoliceUnit.Driver.Tasks.CurrentTaskStatus == TaskStatus.NoTask)
-                {
-                    Game.LogTrivial($"[RPE Ambient Backup]: {ambientPoliceUnit.Model.Name} [{ambientPoliceUnit.Handle}] driver [{ambientPoliceUnit.Driver.Handle}] has no task.  Reassiging task.");
-                    if (ambientPoliceUnit.Driver.CurrentVehicle)
-                    {
-                        ambientPoliceUnit.Driver.Tasks.DriveToPosition(approachPosition, 15f, (VehicleDrivingFlags)263088, acceptedDistance);
-                    }
-                    else
-                    {
-                        Game.LogTrivial($"[RPE Ambient Backup]: {ambientPoliceUnit.Model.Name} [{ambientPoliceUnit.Handle}] driver [{ambientPoliceUnit.Driver.Handle}] is not in a vehicle.  Exiting loop.");
-                        return;
-                    }
-                }
-            }
+        //    float GetAcceptedStoppingDistance()
+        //    {
+        //        var dist = (MathHelper.ConvertMetersPerSecondToMilesPerHour(15f) / (250 * 0.8f));
+        //        return MathHelper.Clamp(dist, 2, 10);
+        //    }
 
-            bool VehicleAndDriverAreValid()
-            {
-                if (ambientPoliceUnit == null)
-                {
-                    Game.LogTrivial($"[RPE Ambient Backup]: ambientPoliceUnit is null");
-                    Dismiss();
-                    return false;
-                }
-                if (!ambientPoliceUnit)
-                {
-                    Game.LogTrivial($"[RPE Ambient Backup]: Vehicle is null");
-                    Dismiss();
-                    return false;
-                }
-                if (!ambientPoliceUnit.Driver || !ambientPoliceUnit.Driver.CurrentVehicle || !ambientPoliceUnit.Driver.IsAlive)
-                {
-                    Game.LogTrivial($"[RPE Ambient Backup]: Driver is null or dead or not in a vehicle");
-                    Dismiss();
-                    return false;
-                }
-                return true;
-            }
+        //    void CheckUnitTaskStatus()
+        //    {
+        //        if (ambientPoliceUnit.Driver.Tasks.CurrentTaskStatus == TaskStatus.NoTask)
+        //        {
+        //            Game.LogTrivial($"[RPE Ambient Backup]: {ambientPoliceUnit.Model.Name} [{ambientPoliceUnit.Handle}] driver [{ambientPoliceUnit.Driver.Handle}] has no task.  Reassiging task.");
+        //            if (ambientPoliceUnit.Driver.CurrentVehicle)
+        //            {
+        //                ambientPoliceUnit.Driver.Tasks.DriveToPosition(approachPosition, 15f, (VehicleDrivingFlags)263088, acceptedDistance);
+        //            }
+        //            else
+        //            {
+        //                Game.LogTrivial($"[RPE Ambient Backup]: {ambientPoliceUnit.Model.Name} [{ambientPoliceUnit.Handle}] driver [{ambientPoliceUnit.Driver.Handle}] is not in a vehicle.  Exiting loop.");
+        //                return;
+        //            }
+        //        }
+        //    }
 
-            void Dismiss()
-            {
-                if (ambientPoliceUnit)
-                {
-                    ambientPoliceUnit.IsPersistent = false;
-                    if (ambientPoliceUnit.Driver)
-                    {
-                        ambientPoliceUnit.Driver.IsPersistent = false;
-                        ambientPoliceUnit.Driver.BlockPermanentEvents = false;
-                    }
-                }
-            }
-        }
+        //    bool VehicleAndDriverAreValid()
+        //    {
+        //        if (ambientPoliceUnit == null || !ambientPoliceUnit)
+        //        {
+        //            Game.LogTrivial($"[RPE Ambient Backup]: ambientPoliceUnit is null");
+        //            Dismiss();
+        //            return false;
+        //        }
+
+        //        if (!ambientPoliceUnit.Driver || !ambientPoliceUnit.Driver.CurrentVehicle || !ambientPoliceUnit.Driver.IsAlive)
+        //        {
+        //            Game.LogTrivial($"[RPE Ambient Backup]: Driver is null or dead or not in a vehicle");
+        //            Dismiss();
+        //            return false;
+        //        }
+        //        return true;
+        //    }
+
+        //    void Dismiss()
+        //    {
+        //        if (ambientPoliceUnit)
+        //        {
+        //            ambientPoliceUnit.IsPersistent = false;
+        //            if (ambientPoliceUnit.Driver)
+        //            {
+        //                ambientPoliceUnit.Driver.IsPersistent = false;
+        //                ambientPoliceUnit.Driver.BlockPermanentEvents = false;
+        //            }
+        //        }
+        //    }
+        //}
 
         private static void AddAmbientUnitToPursuit(Vehicle ambientPoliceUnit)
         {
