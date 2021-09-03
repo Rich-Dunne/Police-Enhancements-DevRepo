@@ -5,7 +5,7 @@ using RichsPoliceEnhancements.Utils;
 
 namespace RichsPoliceEnhancements.Features
 {
-    internal class SilentBackup
+    internal class BackupMimicLights
     {
         internal static void Main()
         {

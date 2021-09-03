@@ -7,7 +7,7 @@ namespace RichsPoliceEnhancements
         // Feature Settings
         internal static bool EnableAmbientBackup { get; private set; } = false;
         internal static bool EnableAISirenCycle { get; private set; } = false;
-        internal static bool EnableSilentBackup { get; private set; } = false;
+        internal static bool BackupMimicLights { get; private set; } = false;
         internal static bool EnableTVI { get; private set; } = false;
         internal static bool EnablePRT { get; private set; } = false;
         internal static bool EnablePursuitUpdates { get; private set; } = false;
@@ -40,7 +40,7 @@ namespace RichsPoliceEnhancements
             // Feature settings
             EnableAmbientBackup = _ini.ReadBoolean("Features", "EnableAmbientBackup", false);
             EnableAISirenCycle = _ini.ReadBoolean("Features", "EnableAISirenCycle", false);
-            EnableSilentBackup = _ini.ReadBoolean("Features", "EnableSilentBackup", false);
+            BackupMimicLights = _ini.ReadBoolean("Features", "EnableBackupMimicLights", false);
             EnableTVI = _ini.ReadBoolean("Features", "EnableTVI", false);
             EnablePRT = _ini.ReadBoolean("Features", "EnablePriorityRadioTraffic", false);
             EnablePursuitUpdates = _ini.ReadBoolean("Features", "EnablePursuitUpdates", false);

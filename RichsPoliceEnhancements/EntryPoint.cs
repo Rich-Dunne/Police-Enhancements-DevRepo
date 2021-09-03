@@ -64,14 +64,14 @@ namespace RichsPoliceEnhancements
                 Game.LogTrivial("[RPE]: AISirenCycle is disabled.");
             }
 
-            if (Settings.EnableSilentBackup)
+            if (Settings.BackupMimicLights)
             {
-                Game.LogTrivial("[RPE]: SilentBackup is enabled.");
-                GameFiber.StartNew(() => SilentBackup.Main(), "RPE Silent Backup Fiber");
+                Game.LogTrivial("[RPE]: BackupMimicLights is enabled.");
+                GameFiber.StartNew(() => BackupMimicLights.Main(), "RPE Backup Mimic Lights Fiber");
             }
             else
             {
-                Game.LogTrivial("[RPE]: SilentBackup is disabled.");
+                Game.LogTrivial("[RPE]: BackupMimicLights is disabled.");
             }
 
             if (Settings.EnableTVI)

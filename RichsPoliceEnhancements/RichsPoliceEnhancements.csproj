@@ -74,7 +74,7 @@
     </Compile>
     <Compile Include="Features\PursuitUpdates.cs" />
     <Compile Include="Settings.cs" />
-    <Compile Include="Features\SilentBackup.cs" />
+    <Compile Include="Features\BackupMimicLights.cs" />
     <Compile Include="Features\TVI.cs" />
     <Compile Include="Utils\ConsoleCommands.cs" />
     <Compile Include="Utils\DependencyChecker.cs" />

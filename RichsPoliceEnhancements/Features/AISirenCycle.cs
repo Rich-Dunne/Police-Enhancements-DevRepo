@@ -87,7 +87,7 @@ namespace RichsPoliceEnhancements.Features
                     continue;
                 }
 
-                if (Settings.EnableSilentBackup && Game.LocalPlayer.Character.LastVehicle && !Game.LocalPlayer.Character.LastVehicle.IsSirenOn)
+                if (Settings.BackupMimicLights && Game.LocalPlayer.Character.LastVehicle && !Game.LocalPlayer.Character.LastVehicle.IsSirenOn)
                 {
                     Game.LogTrivial($"[RPE AI Siren Cycle]: SilentBackup is enabled and your vehicle's siren is off, so we don't need to cycle the AI's sirens.");
                     GameFiber.Yield();
